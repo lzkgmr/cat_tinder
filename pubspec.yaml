@@ -40,6 +40,9 @@ dependencies:
   provider: ^6.0.5
   flutter_swipe_action_cell: ^2.0.0
   lottie: ^2.4.0
+  flutter_card_swiper: ^7.2.0
+  connectivity_plus: ^7.0.0
+  flutter_cache_manager: ^3.4.1
 
 dev_dependencies:
   flutter_test:
@@ -66,6 +69,7 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/lottie/cat_loading.json
+    - assets/icons/cat_icon.png
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see

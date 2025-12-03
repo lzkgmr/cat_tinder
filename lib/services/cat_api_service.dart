@@ -1,70 +1,133 @@
-import 'dart:async';
-import 'package:dio/dio.dart';
+import 'dart:convert';
+import 'package:cat_tinder/models/cat.dart';
+import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import '../models/breed.dart';
-import '../models/cat_image.dart';
-import '../handling/error_handling.dart';
 
 class CatApiService {
   static const _baseUrl = 'https://api.thecatapi.com/v1';
-  final Dio _dio;
+  final String? apiKey;
+  final Connectivity connectivity;
 
-  CatApiService({String? apiKey, Dio? dio})
-      : _dio = dio ??
-            Dio(BaseOptions(
-              baseUrl: _baseUrl,
-              connectTimeout: const Duration(seconds: 10),
-              receiveTimeout: const Duration(seconds: 10),
-              headers: apiKey != null ? {'x-api-key': apiKey} : null,
-            ));
+  final Set<String> _loadedCatIds = {};
 
-  Future<CatImage> fetchRandomCat({String? breedId}) async {
-    try {
-      final query = <String, dynamic>{
-        'limit': 1,
-        'size': 'med',
-        'has_breeds': 1,
-      };
-      if (breedId != null) query['breed_ids'] = breedId;
+  CatApiService({this.apiKey, Connectivity? connectivity})
+      : connectivity = connectivity ?? Connectivity();
 
-      final resp = await _dio.get('/images/search', queryParameters: query);
-      if (resp.statusCode == 200 && resp.data is List && (resp.data as List).isNotEmpty) {
-        final first = (resp.data as List).first as Map<String, dynamic>;
-        return CatImage.fromJson(first);
-      } else {
-        throw ApiException('Empty response from images/search', resp.statusCode);
+  Future<List<Cat>> fetchCats({int limit = 10}) async {
+    final connectivityResult = await connectivity.checkConnectivity();
+    if (connectivityResult == ConnectivityResult.none) {
+      throw Exception('No internet connection');
+    }
+
+    List<Cat> cats = await _fetchFromRemote(limit);
+
+    cats = cats.where((cat) => !_loadedCatIds.contains(cat.id)).toList();
+    for (var cat in cats) {
+      _loadedCatIds.add(cat.id);
+    }
+
+    await _precacheAllImages(cats);
+    return cats;
+  }
+
+  Future<void> _precacheAllImages(List<Cat> cats) async {
+    final cacheManager = DefaultCacheManager();
+    final tasks = cats.map((cat) async {
+      try {
+        await cacheManager.downloadFile(cat.imageUrl);
+      } catch (e) {
+        if (kDebugMode) print('Failed to cache ${cat.imageUrl}: $e');
       }
-    } on DioException catch (e) {
-      final msg = e.response?.data?.toString() ?? e.message;
-      throw ApiException('Failed to fetch random cat: $msg', e.response?.statusCode);
-    } catch (e) {
-      throw ApiException('Unexpected error: $e');
-    }
+    });
+    await Future.wait(tasks);
   }
 
-  Future<List<Breed>> fetchBreeds() async {
-    try {
-      final resp = await _dio.get('/breeds');
+  Future<List<Cat>> _fetchFromRemote(int limit) async {
+    int attempts = 0;
+    while (attempts < 5) {
+      try {
+        final response = await http.get(
+          Uri.parse('$_baseUrl/images/search?limit=$limit&has_breeds=1'),
+          headers: apiKey != null ? {'x-api-key': apiKey!} : null,
+        );
 
-      if (resp.statusCode == 200 && resp.data is List) {
-        final list = resp.data as List;
-        return list.map((e) => Breed.fromJson(e as Map<String, dynamic>)).toList();
-      } else {
-        throw ApiException('Empty response from breeds', resp.statusCode);
+        if (response.statusCode == 200) {
+          final List<dynamic> data = json.decode(response.body);
+          final cats = <Cat>[];
+
+          for (var image in data) {
+            final cat = await _fetchCatDetails(image['id']);
+            if (cat != null) cats.add(cat);
+          }
+
+          if (cats.isEmpty) throw Exception('No cats with breed info found');
+          return cats;
+        } else {
+          if (kDebugMode) print('HTTP ${response.statusCode}: ${response.body}');
+        }
+      } catch (e) {
+        if (kDebugMode) print('Attempt $attempts failed: $e');
       }
-    } on DioException catch (e) {
-      final msg = e.response?.data?.toString() ?? e.message;
-      throw ApiException('Failed to fetch breeds: $msg', e.response?.statusCode);
-    } catch (e) {
-      throw ApiException('Unexpected error: $e');
+      attempts++;
     }
+
+    throw Exception('Failed to load cats after multiple attempts');
   }
 
-  Future<Breed?> fetchBreedById(String id) async {
-    final breeds = await fetchBreeds();
-    try {
-      return breeds.firstWhere((b) => b.id == id);
-    } catch (_) {
-      return null;
+  Future<Cat?> _fetchCatDetails(String imageId) async {
+    int attempts = 0;
+    while (attempts < 5) {
+      try {
+        final response = await http.get(
+          Uri.parse('$_baseUrl/images/$imageId'),
+          headers: apiKey != null ? {'x-api-key': apiKey!} : null,
+        );
+
+        if (response.statusCode == 200) {
+          final Map<String, dynamic> detailData = json.decode(response.body);
+          final List<dynamic> breeds = detailData['breeds'] ?? [];
+
+          if (breeds.isNotEmpty && detailData['url'] != null) {
+            final breed = breeds[0];
+            return Cat(
+              id: detailData['id'],
+              imageUrl: detailData['url'],
+              breed: breed['name'],
+              description: breed['description'] ?? 'No description available',
+              temperament: breed['temperament'] ?? 'No temperament info',
+              origin: breed['origin'] ?? 'Unknown origin',
+              lifeSpan: breed['life_span'] ?? 'Unknown',
+              wikipediaUrl: breed['wikipedia_url'] ?? '',
+            );
+          }
+        }
+      } catch (e) {
+        if (kDebugMode) print('Error fetching cat details $imageId: $e');
+      }
+      attempts++;
     }
+
+    return Cat(
+      id: 'placeholder_${DateTime.now().millisecondsSinceEpoch}',
+      imageUrl: 'https://via.placeholder.com/400',
+      breed: 'Не удалось загрузить',
+      description: 'Не удалось загрузить',
+      temperament: 'Не удалось загрузить',
+      origin: 'Не удалось загрузить',
+      lifeSpan: 'Не удалось загрузить',
+      wikipediaUrl: '',
+    );
   }
+
+//   Future<Breed?> fetchBreedById(String id) async {
+//     final breeds = await fetchBreeds();
+//     try {
+//       return breeds.firstWhere((b) => b.id == id);
+//     } catch (_) {
+//       return null;
+//     }
+//   }
 }
