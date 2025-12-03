@@ -1,10 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:lottie/lottie.dart';
 import '../services/cat_api_service.dart';
-import '../models/cat_image.dart';
+import '../models/cat.dart';
 import 'breed_detail_screen.dart';
+import 'package:flutter_card_swiper/flutter_card_swiper.dart';
 
 class LoadingAnimation extends StatelessWidget {
   final double size;
@@ -21,282 +21,305 @@ class LoadingAnimation extends StatelessWidget {
 }
 
 class MainScreen extends StatefulWidget {
-  final CatApiService api;
-  const MainScreen({super.key, required this.api});
+  const MainScreen({super.key});
 
   @override
-  State<MainScreen> createState() => _MainScreenState();
+  _MainScreenState createState() => _MainScreenState();
 }
 
 class _MainScreenState extends State<MainScreen>
     with SingleTickerProviderStateMixin {
-  List<CatImage> cats = [];
+  final CatApiService api = CatApiService(
+      apiKey:
+          'live_K7HtYPDK7wAbiddICuTClSn5wwHOj91lvCItPQ4cDQztwupQHk4IQynylyXu1daB');
+  final List<Cat> _cats = [];
+  final List<Cat> _likedCats = [];
+  final CardSwiperController _cardSwiperController = CardSwiperController();
   int currentIndex = 0;
   int likes = 0;
 
   bool isLoading = false;
-  bool isAnimating = false;
   bool isImageLoaded = false;
 
   Offset cardOffset = Offset.zero;
   double rotation = 0.0;
 
-  late AnimationController _animationController;
-  Animation<Offset>? _slideAnimation;
-
   @override
   void initState() {
     super.initState();
-    _loadCats(3);
-
-    _animationController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 300),
-    );
-
-    // Один единственный слушатель — обновляет позицию если _slideAnimation задана.
-    _animationController.addListener(() {
-      if (_slideAnimation != null) {
-        final value = _slideAnimation!.value;
-        // Обновляем состояние только если действительно изменилось, чтобы уменьшить лишние setState
-        if (value != cardOffset) {
-          setState(() {
-            cardOffset = value;
-            rotation = cardOffset.dx / 300;
-          });
-        }
-      }
-    });
-
-    _animationController.addStatusListener((status) {
-      if (status == AnimationStatus.completed) {
-        _nextCat();
-        _animationController.reset();
-
-        setState(() {
-          cardOffset = Offset.zero;
-          rotation = 0.0;
-          isAnimating = false;
-          isImageLoaded = false; // сброс перед следующей карточкой
-        });
-      }
-    });
+    _loadCats();
   }
 
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
-  }
-
-  CatImage? get currentCat =>
-      (cats.isNotEmpty && currentIndex < cats.length) ? cats[currentIndex] : null;
-
-  Future<void> _loadCats(int count) async {
-    setState(() => isLoading = true);
+  Future<void> _loadCats() async {
     try {
-      for (int i = 0; i < count; i++) {
-        final cat = await widget.api.fetchRandomCat();
-        cats.add(cat);
-      }
+      List<Cat> cats = await api.fetchCats();
+      setState(() {
+        _cats.addAll(cats);
+      });
     } catch (e) {
-      _showError(e.toString());
-    } finally {
-      setState(() => isLoading = false);
+      if (kDebugMode) {
+        print('Error loading cats: $e');
+      }
     }
   }
 
-  void _showError(String msg) {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Error'),
-        content: Text(msg),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('OK'))
-        ],
-      ),
-    );
-  }
+  Cat? get currentCat =>
+      (_cats.isNotEmpty && currentIndex < _cats.length) ? _cats[currentIndex] : null;
 
   void _onLike() {
     setState(() => likes++);
-    _animateCard(const Offset(500, 0));
+    _cardSwiperController.swipe(CardSwiperDirection.right);
   }
 
   void _onDislike() {
-    _animateCard(const Offset(-500, 0));
-  }
-
-  void _animateCard(Offset endOffset) {
-    if (currentCat == null) return;
-
-    setState(() => isAnimating = true);
-
-    // создаём новую анимацию, но НЕ добавляем слушатель здесь
-    _slideAnimation = Tween<Offset>(begin: cardOffset, end: endOffset).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
-    );
-
-    // Запускаем контроллер — в listener (в initState) мы используем _slideAnimation, поэтому он начнёт обновлять cardOffset.
-    _animationController.forward(from: 0.0);
-  }
-
-  void _nextCat() {
-    if (currentIndex < cats.length - 1) {
-      setState(() => currentIndex++);
-    } else {
-      _loadCats(3);
-      setState(() => currentIndex++);
-    }
-    // при смене карточки сброс флага загрузки (кнопки будут скрыты)
-    setState(() => isImageLoaded = false);
+    _cardSwiperController.swipe(CardSwiperDirection.left);
   }
 
   void _onTapImage() {
     final cat = currentCat;
     if (cat == null) return;
 
-    final breed = cat.breeds.isNotEmpty ? cat.breeds.first : null;
+    final breed = cat.breed.isNotEmpty ? cat.breed : null;
     if (breed == null) return;
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => BreedDetailScreen(breed: breed)),
-    );
+    // Navigator.push(
+    //   context,
+    //   MaterialPageRoute(builder: (_) => BreedDetailScreen(breed: breed)),
+    // );
   }
 
-  void _onPanUpdate(DragUpdateDetails details) {
-    if (isAnimating) return;
-    setState(() {
-      cardOffset += details.delta;
-      rotation = cardOffset.dx / 300;
-    });
-  }
+    @override
+Widget build(BuildContext context) {
+  final screenWidth = MediaQuery.of(context).size.width;
+  final screenHeight = MediaQuery.of(context).size.height;
 
-  void _onPanEnd(DragEndDetails details) {
-    if (isAnimating) return;
-
-    if (cardOffset.dx > 150) {
-      _onLike();
-    } else if (cardOffset.dx < -150) {
-      _onDislike();
-    } else {
-      setState(() {
-        cardOffset = Offset.zero;
-        rotation = 0.0;
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final cat = currentCat;
-    // print в build нормально срабатывает при каждом rebuild, но теперь rebuild'ы не будут бесконечными
-    print(cat?.url);
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('CatTinder'),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Center(child: Text('Likes: $likes')),
+  return Scaffold(
+    body: Stack(
+      children: [
+        Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.white, Colors.white],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
           ),
-        ],
-      ),
-      body: Center(
-        child: cat == null
-            ? const LoadingAnimation()
-            : GestureDetector(
-                onPanUpdate: _onPanUpdate,
-                onPanEnd: _onPanEnd,
-                onTap: _onTapImage,
-                child: Transform.translate(
-                  offset: cardOffset,
-                  child: Transform.rotate(
-                    angle: rotation,
-                    child: SizedBox(
-                      width: 300,
-                      height: 420,
-                      child: Column(
-                        children: [
-                          Expanded(
-                            flex: 3,
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(0), // или твои углы
-                              child: Stack(
-                                fit: StackFit.expand, // <-- главное!
+        ),
+
+        SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.only(left: 20, top: 10),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: Image.asset('assets/icons/cat_icon.png'),
+                ),
+                const SizedBox(width: 12),
+                const Text(
+                  'котики',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                    fontFamily: 'Pacifico',
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        // Карточка с фото котика и кнопками
+        Positioned(
+          top: 120, // чуть ниже надписи
+          left: 0,
+          right: 0,
+          bottom: 40,
+          child: _cats.isEmpty
+              ? Center(child: Lottie.asset('assets/lottie/cat_loading.json'))
+              : CardSwiper(
+                  controller: _cardSwiperController,
+                  cardsCount: _cats.length,
+                  onSwipe: _onSwipe,
+                  onUndo: _onUndo,
+                  numberOfCardsDisplayed: 3,
+                  backCardOffset: const Offset(0, 40),
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  allowedSwipeDirection: const AllowedSwipeDirection.only(
+                      left: true, right: true),
+                  cardBuilder: (context, index, percentThresholdX,
+                      percentThresholdY) {
+                    final cat = _cats[index];
+                    return GestureDetector(
+                      onTap: () => _onTapImage(),
+                      child: Card(
+                        elevation: 4,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        color: Colors.pink[100],
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // Фото котика с верхними скруглёнными углами
+                            ClipRRect(
+                              borderRadius: const BorderRadius.vertical(
+                                top: Radius.circular(15),
+                              ),
+                              child: Image.network(
+                                cat.imageUrl,
+                                width: double.infinity,
+                                height: screenHeight * 0.59,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                            // Название породы
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8.0, vertical: 6),
+                              child: Text(
+                                cat.breed,
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                            // Кнопки Like / Dislike
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                  left: 16, right: 16, bottom: 0),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
                                 children: [
-                                  CachedNetworkImage(
-                                    imageUrl: cat.url,
-                                    fit: BoxFit.cover,
-                                    placeholder: (_, __) => Container(color: Colors.grey[300]), // растягиваем
-                                    errorWidget: (_, __, ___) => const Icon(Icons.error),
-                                    imageBuilder: (context, provider) {
-                                      if (!isImageLoaded) {
-                                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                                          if (mounted) setState(() => isImageLoaded = true);
-                                        });
-                                      }
-                                      return Image(image: provider, fit: BoxFit.cover);
-                                    },
+                                  SizedBox(
+                                    width: screenWidth * 0.3,
+                                    child: DislikeButton(
+                                        onPressed: _onDislike),
                                   ),
-
-                                  if (!isImageLoaded) Container(color: Colors.white70),
-
-                                  if (!isImageLoaded)
-                                    const Center(
-                                      child: LoadingAnimation(size: 100),
-                                    ),
+                                  SizedBox(
+                                    width: screenWidth * 0.3,
+                                    child:
+                                        LikeButton(onPressed: _onLike),
+                                  ),
                                 ],
                               ),
                             ),
-                          ),
-
-
-                          const SizedBox(height: 16),
-
-                          // // Название породы (фиксированная высота)
-                          // SizedBox(
-                          //   height: 28,
-                          //   child: Text(
-                          //     cat.breeds.isNotEmpty ? cat.breeds.first.name : '',
-                          //     style: const TextStyle(
-                          //         fontSize: 20, fontWeight: FontWeight.bold),
-                          //     textAlign: TextAlign.center,
-                          //   ),
-                          // ),
-
-                          // const SizedBox(height: 24),
-
-                          // Показываем кнопки только после загрузки изображения
-                          if (isImageLoaded)
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                ElevatedButton.icon(
-                                  onPressed: _onDislike,
-                                  icon: const Icon(Icons.close),
-                                  label: const Text('Dislike'),
-                                  style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                                ),
-                                const SizedBox(width: 32),
-                                ElevatedButton.icon(
-                                  onPressed: _onLike,
-                                  icon: const Icon(Icons.favorite),
-                                  label: const Text('Like'),
-                                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                                ),
-                              ],
-                            ),
-                        ],
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+        ),
+      ],
+    ),
+    bottomNavigationBar: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Divider(height: 1, color: Colors.white),
+        BottomAppBar(
+          color: Colors.white,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              IconButton(
+                icon:
+                    const Icon(Icons.person, color: Colors.pinkAccent, size: 36),
+                onPressed: _onTapImage,
+              ),
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.favorite,
+                        color: Colors.pinkAccent, size: 30),
+                    onPressed: _onTapImage,
+                  ),
+                  Positioned(
+                    top: 2,
+                    right: 4,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Colors.pinkAccent,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '$likes',
+                        style: const TextStyle(
+                            fontSize: 16, color: Colors.white),
                       ),
                     ),
                   ),
-                ),
+                ],
               ),
-      ),
-      backgroundColor: Colors.white70,
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+  bool _onSwipe(
+    int previousIndex,
+    int? currentIndex,
+    CardSwiperDirection direction,
+  ) {
+    setState(() {
+      if (direction == CardSwiperDirection.right) {
+        likes++;
+        _likedCats.add(_cats[previousIndex]);
+      }
+    });
+
+    if (previousIndex % 10 > 3) {
+      _loadCats();
+    }
+
+    return true;
+  }
+
+  bool _onUndo(
+    int? previousIndex,
+    int currentIndex,
+    CardSwiperDirection direction,
+  ) {
+    return true;
+  }
+
+  }
+
+class DislikeButton extends StatelessWidget {
+  final VoidCallback onPressed;
+
+  const DislikeButton({super.key, required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      icon: const Icon(Icons.cancel, color: Colors.pinkAccent, size: 40),
+      onPressed: onPressed,
+    );
+  }
+}
+
+class LikeButton extends StatelessWidget {
+  final VoidCallback onPressed;
+
+  const LikeButton({super.key, required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      icon: const Icon(Icons.favorite, color: Colors.pinkAccent, size: 40),
+      onPressed: onPressed,
     );
   }
 }
