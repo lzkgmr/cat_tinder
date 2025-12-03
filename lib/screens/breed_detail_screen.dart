@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import '../services/cat_api_service.dart';
 import '../models/breed.dart';
 
 class BreedDetailScreen extends StatelessWidget {
