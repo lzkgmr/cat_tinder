@@ -1,9 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:lottie/lottie.dart';
 import '../services/cat_api_service.dart';
 import '../models/cat_image.dart';
 import 'breed_detail_screen.dart';
-import 'package:lottie/lottie.dart';
 
 class LoadingAnimation extends StatelessWidget {
   final double size;
@@ -27,20 +28,21 @@ class MainScreen extends StatefulWidget {
   State<MainScreen> createState() => _MainScreenState();
 }
 
-class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateMixin {
+class _MainScreenState extends State<MainScreen>
+    with SingleTickerProviderStateMixin {
   List<CatImage> cats = [];
   int currentIndex = 0;
   int likes = 0;
+
   bool isLoading = false;
+  bool isAnimating = false;
+  bool isImageLoaded = false;
 
   Offset cardOffset = Offset.zero;
   double rotation = 0.0;
 
   late AnimationController _animationController;
-  late Animation<Offset> _slideAnimation;
-  bool isAnimating = false;
-
-  bool isImageLoaded = false;
+  Animation<Offset>? _slideAnimation;
 
   @override
   void initState() {
@@ -52,15 +54,30 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
       duration: const Duration(milliseconds: 300),
     );
 
+    // Один единственный слушатель — обновляет позицию если _slideAnimation задана.
+    _animationController.addListener(() {
+      if (_slideAnimation != null) {
+        final value = _slideAnimation!.value;
+        // Обновляем состояние только если действительно изменилось, чтобы уменьшить лишние setState
+        if (value != cardOffset) {
+          setState(() {
+            cardOffset = value;
+            rotation = cardOffset.dx / 300;
+          });
+        }
+      }
+    });
+
     _animationController.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
         _nextCat();
         _animationController.reset();
+
         setState(() {
           cardOffset = Offset.zero;
           rotation = 0.0;
           isAnimating = false;
-          isImageLoaded = false;
+          isImageLoaded = false; // сброс перед следующей карточкой
         });
       }
     });
@@ -78,14 +95,10 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
   Future<void> _loadCats(int count) async {
     setState(() => isLoading = true);
     try {
-      final List<CatImage> newCats = [];
       for (int i = 0; i < count; i++) {
         final cat = await widget.api.fetchRandomCat();
-        newCats.add(cat);
+        cats.add(cat);
       }
-      setState(() {
-        cats.addAll(newCats);
-      });
     } catch (e) {
       _showError(e.toString());
     } finally {
@@ -120,18 +133,13 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
 
     setState(() => isAnimating = true);
 
+    // создаём новую анимацию, но НЕ добавляем слушатель здесь
     _slideAnimation = Tween<Offset>(begin: cardOffset, end: endOffset).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
     );
 
-    _animationController.addListener(() {
-      setState(() {
-        cardOffset = _slideAnimation.value;
-        rotation = cardOffset.dx / 300;
-      });
-    });
-
-    _animationController.forward();
+    // Запускаем контроллер — в listener (в initState) мы используем _slideAnimation, поэтому он начнёт обновлять cardOffset.
+    _animationController.forward(from: 0.0);
   }
 
   void _nextCat() {
@@ -141,6 +149,8 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
       _loadCats(3);
       setState(() => currentIndex++);
     }
+    // при смене карточки сброс флага загрузки (кнопки будут скрыты)
+    setState(() => isImageLoaded = false);
   }
 
   void _onTapImage() {
@@ -182,7 +192,8 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
   @override
   Widget build(BuildContext context) {
     final cat = currentCat;
-
+    // print в build нормально срабатывает при каждом rebuild, но теперь rebuild'ы не будут бесконечными
+    print(cat?.url);
     return Scaffold(
       appBar: AppBar(
         title: const Text('CatTinder'),
@@ -205,45 +216,60 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
                   child: Transform.rotate(
                     angle: rotation,
                     child: SizedBox(
-                      // фиксируем высоту карточки, чтобы placeholder и готовое изображение занимали одно и то же место
                       width: 300,
-                      height: 400,
+                      height: 420,
                       child: Column(
-                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Expanded(
-                            child: CachedNetworkImage(
-                              imageUrl: cat.url,
-                              width: 300,
-                              fit: BoxFit.cover,
-                              placeholder: (_, __) => const LoadingAnimation(),
-                              errorWidget: (_, _, __) => const Icon(Icons.error),
-                              imageBuilder: (context, imageProvider) {
-                                if (!isImageLoaded) {
-                                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                                    setState(() => isImageLoaded = true);
-                                  });
-                                }
-                                return Image(
-                                  image: imageProvider,
-                                  width: 300,
-                                  fit: BoxFit.cover,
-                                );
-                              },
+                            flex: 3,
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(0), // или твои углы
+                              child: Stack(
+                                fit: StackFit.expand, // <-- главное!
+                                children: [
+                                  CachedNetworkImage(
+                                    imageUrl: cat.url,
+                                    fit: BoxFit.cover,
+                                    placeholder: (_, __) => Container(color: Colors.grey[300]), // растягиваем
+                                    errorWidget: (_, __, ___) => const Icon(Icons.error),
+                                    imageBuilder: (context, provider) {
+                                      if (!isImageLoaded) {
+                                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                                          if (mounted) setState(() => isImageLoaded = true);
+                                        });
+                                      }
+                                      return Image(image: provider, fit: BoxFit.cover);
+                                    },
+                                  ),
+
+                                  if (!isImageLoaded) Container(color: Colors.white70),
+
+                                  if (!isImageLoaded)
+                                    const Center(
+                                      child: LoadingAnimation(size: 100),
+                                    ),
+                                ],
+                              ),
                             ),
                           ),
+
+
                           const SizedBox(height: 16),
-                          // название породы теперь всегда занимает место, даже если его нет
-                          SizedBox(
-                            height: 24,
-                            child: Text(
-                              cat.breeds.isNotEmpty ? cat.breeds.first.name : '',
-                              style: const TextStyle(
-                                  fontSize: 20, fontWeight: FontWeight.bold),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                          const SizedBox(height: 24),
+
+                          // // Название породы (фиксированная высота)
+                          // SizedBox(
+                          //   height: 28,
+                          //   child: Text(
+                          //     cat.breeds.isNotEmpty ? cat.breeds.first.name : '',
+                          //     style: const TextStyle(
+                          //         fontSize: 20, fontWeight: FontWeight.bold),
+                          //     textAlign: TextAlign.center,
+                          //   ),
+                          // ),
+
+                          // const SizedBox(height: 24),
+
+                          // Показываем кнопки только после загрузки изображения
                           if (isImageLoaded)
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -252,16 +278,14 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
                                   onPressed: _onDislike,
                                   icon: const Icon(Icons.close),
                                   label: const Text('Dislike'),
-                                  style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.red),
+                                  style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                                 ),
                                 const SizedBox(width: 32),
                                 ElevatedButton.icon(
                                   onPressed: _onLike,
                                   icon: const Icon(Icons.favorite),
                                   label: const Text('Like'),
-                                  style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.green),
+                                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
                                 ),
                               ],
                             ),
@@ -272,6 +296,7 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
                 ),
               ),
       ),
+      backgroundColor: Colors.white70,
     );
   }
 }
