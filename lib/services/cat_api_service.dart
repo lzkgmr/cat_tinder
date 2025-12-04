@@ -101,6 +101,7 @@ class CatApiService {
               origin: breed['origin'] ?? 'Unknown origin',
               lifeSpan: breed['life_span'] ?? 'Unknown',
               wikipediaUrl: breed['wikipedia_url'] ?? '',
+              breedId: breed['id'] ?? '',
             );
           }
         }
@@ -119,15 +120,60 @@ class CatApiService {
       origin: 'Не удалось загрузить',
       lifeSpan: 'Не удалось загрузить',
       wikipediaUrl: '',
+      breedId: '',
     );
   }
 
-//   Future<Breed?> fetchBreedById(String id) async {
-//     final breeds = await fetchBreeds();
-//     try {
-//       return breeds.firstWhere((b) => b.id == id);
-//     } catch (_) {
-//       return null;
-//     }
-//   }
+  Future<List<Breed>> fetchBreeds() async {
+    int attempts = 0;
+
+    while (attempts < 5) {
+      try {
+        final response = await http.get(
+          Uri.parse('$_baseUrl/breeds'),
+          headers: apiKey != null ? {'x-api-key': apiKey!} : null,
+        );
+
+        if (response.statusCode == 200) {
+          final List<dynamic> data = json.decode(response.body);
+          final List<Breed> breeds = data.map((item) {
+            return Breed(
+              id: item['id'] ?? '',
+              name: item['name'] ?? '',
+              description: item['description'] ?? 'No description available',
+              temperament: item['temperament'] ?? 'No temperament info',
+              origin: item['origin'] ?? 'Unknown origin',
+              lifeSpan: item['life_span'] ?? 'Unknown',
+              weightMetric: item['weight'] != null && item['weight']['metric'] != null
+                  ? item['weight']['metric']
+                  : null,
+              adaptability: item['adaptability'] is int ? item['adaptability'] as int : null,
+              intelligence: item['intelligence'] is int ? item['intelligence'] as int : null,
+              imageUrl: item['image'] != null ? (item['image']['url'] as String?) : null,
+            );
+          }).toList();
+
+          return breeds;
+        } else {
+          if (kDebugMode) print('HTTP ${response.statusCode}: ${response.body}');
+        }
+      } catch (e) {
+        if (kDebugMode) print('Attempt $attempts to load breeds failed: $e');
+      }
+
+      attempts++;
+    }
+
+    throw Exception('Failed to load breeds after multiple attempts');
+  }
+
+
+  Future<Breed?> fetchBreedById(String id) async {
+    final breeds = await fetchBreeds();
+    try {
+      return breeds.firstWhere((b) => b.id == id);
+    } catch (_) {
+      return null;
+    }
+  }
 }
