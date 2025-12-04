@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
@@ -5,20 +6,6 @@ import '../services/cat_api_service.dart';
 import '../models/cat.dart';
 import 'breed_detail_screen.dart';
 import 'package:flutter_card_swiper/flutter_card_swiper.dart';
-
-class LoadingAnimation extends StatelessWidget {
-  final double size;
-  const LoadingAnimation({super.key, this.size = 150});
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: size,
-      height: size,
-      child: Lottie.asset('assets/lottie/cat_loading.json'),
-    );
-  }
-}
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -75,17 +62,24 @@ class _MainScreenState extends State<MainScreen>
     _cardSwiperController.swipe(CardSwiperDirection.left);
   }
 
-  void _onTapImage() {
+  Future _onTapImage() async {
     final cat = currentCat;
     if (cat == null) return;
 
-    final breed = cat.breed.isNotEmpty ? cat.breed : null;
-    if (breed == null) return;
+    if (cat.breedId.isEmpty) return;
 
-    // Navigator.push(
-    //   context,
-    //   MaterialPageRoute(builder: (_) => BreedDetailScreen(breed: breed)),
-    // );
+    final breed = await api.fetchBreedById(cat.breedId);
+    if (breed == null || cat.imageUrl.isEmpty) return;
+
+    Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) => BreedDetailScreen(
+        breed: breed,
+        imageWidget: CachedNetworkImage(imageUrl: cat.imageUrl),
+      ),
+    ),
+  );
   }
 
     @override
@@ -98,11 +92,7 @@ Widget build(BuildContext context) {
       children: [
         Container(
           decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.white, Colors.white],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
+            color: Color.fromARGB(255, 242, 242, 242)
           ),
         ),
 
@@ -132,9 +122,8 @@ Widget build(BuildContext context) {
           ),
         ),
 
-        // Карточка с фото котика и кнопками
         Positioned(
-          top: 120, // чуть ниже надписи
+          top: 120,
           left: 0,
           right: 0,
           bottom: 40,
@@ -164,7 +153,6 @@ Widget build(BuildContext context) {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            // Фото котика с верхними скруглёнными углами
                             ClipRRect(
                               borderRadius: const BorderRadius.vertical(
                                 top: Radius.circular(15),
@@ -176,7 +164,6 @@ Widget build(BuildContext context) {
                                 fit: BoxFit.cover,
                               ),
                             ),
-                            // Название породы
                             Padding(
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 8.0, vertical: 6),
@@ -189,7 +176,6 @@ Widget build(BuildContext context) {
                                 ),
                               ),
                             ),
-                            // Кнопки Like / Dislike
                             Padding(
                               padding: const EdgeInsets.only(
                                   left: 16, right: 16, bottom: 0),
@@ -222,7 +208,7 @@ Widget build(BuildContext context) {
     bottomNavigationBar: Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Divider(height: 1, color: Colors.white),
+        const Divider(height: 1, color: Color.fromARGB(255, 242, 242, 242)),
         BottomAppBar(
           color: Colors.white,
           child: Row(
@@ -253,7 +239,7 @@ Widget build(BuildContext context) {
                       child: Text(
                         '$likes',
                         style: const TextStyle(
-                            fontSize: 16, color: Colors.white),
+                            fontSize: 12, color: Colors.white),
                       ),
                     ),
                   ),
@@ -277,6 +263,10 @@ Widget build(BuildContext context) {
         likes++;
         _likedCats.add(_cats[previousIndex]);
       }
+
+      if (currentIndex != null) {
+        this.currentIndex = currentIndex;
+      }
     });
 
     if (previousIndex % 10 > 3) {
@@ -291,6 +281,9 @@ Widget build(BuildContext context) {
     int currentIndex,
     CardSwiperDirection direction,
   ) {
+    setState(() {
+      this.currentIndex = currentIndex;
+    });
     return true;
   }
 

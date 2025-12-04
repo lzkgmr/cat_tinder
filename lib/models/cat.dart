@@ -7,6 +7,7 @@ class Cat {
   final String origin;
   final String lifeSpan;
   final String wikipediaUrl;
+  final String breedId;
 
   Cat({
     required this.id,
@@ -17,5 +18,6 @@ class Cat {
     required this.origin,
     required this.lifeSpan,
     required this.wikipediaUrl,
+    required this.breedId,
   });
 }
