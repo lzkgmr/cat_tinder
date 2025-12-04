@@ -9,6 +9,7 @@ class Breed {
   final int? adaptability;
   final int? intelligence;
   final String? imageUrl;
+  final String? countryCode;
 
   Breed({
     required this.id,
@@ -21,6 +22,7 @@ class Breed {
     this.adaptability,
     this.intelligence,
     this.imageUrl,
+    this.countryCode,
   });
 
   factory Breed.fromJson(Map<String, dynamic> json) {
@@ -37,6 +39,7 @@ class Breed {
       adaptability: json['adaptability'] is int ? json['adaptability'] as int : null,
       intelligence: json['intelligence'] is int ? json['intelligence'] as int : null,
       imageUrl: json['image'] != null ? (json['image']['url'] as String?) : null,
+      countryCode: json['country_code'] as String?
     );
   }
 }

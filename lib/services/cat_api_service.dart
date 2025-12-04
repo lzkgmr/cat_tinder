@@ -150,6 +150,7 @@ class CatApiService {
               adaptability: item['adaptability'] is int ? item['adaptability'] as int : null,
               intelligence: item['intelligence'] is int ? item['intelligence'] as int : null,
               imageUrl: item['image'] != null ? (item['image']['url'] as String?) : null,
+              countryCode: item['country_code'] ?? '',
             );
           }).toList();
 

@@ -4,25 +4,97 @@ import '../models/breed.dart';
 class BreedDetailScreen extends StatelessWidget {
   final Breed breed;
   final Widget imageWidget;
-  const BreedDetailScreen({super.key, required this.breed, required this.imageWidget});
+
+  const BreedDetailScreen({
+    super.key,
+    required this.breed,
+    required this.imageWidget,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color.fromARGB(255, 242, 242, 242),
-      appBar: AppBar(title: Text(breed.name, style: const TextStyle(fontWeight: FontWeight.w600)), backgroundColor: Color.fromARGB(255, 242, 242, 242)),
+      backgroundColor: const Color.fromARGB(255, 242, 242, 242),
+      appBar: AppBar(
+        title: Text(
+          breed.name,
+          style: const TextStyle(fontWeight: FontWeight.w600),
+        ),
+        backgroundColor: const Color.fromARGB(255, 242, 242, 242),
+        elevation: 0,
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // cat pic
             ClipRRect(
               borderRadius: BorderRadius.circular(16),
               child: imageWidget,
             ),
+            const SizedBox(height: 12),
+
+            // temperaments
+            if (breed.temperament != null)
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                alignment: WrapAlignment.start,
+                children: breed.temperament!
+                    .split(',')
+                    .map((temp) => Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            temp.trim(),
+                            style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.pinkAccent),
+                          ),
+                        ))
+                    .toList(),
+              ),
+            const SizedBox(height: 12),
+
+            // origin
+            if (breed.origin != null)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: Row(
+                  children: [
+                    // flag
+                    Text(
+                      countryCodeToEmoji(breed.countryCode ?? ""), // ← флаг
+                      style: const TextStyle(fontSize: 20),
+                    ),
+                    const SizedBox(width: 12),
+                    // country name
+                    Text(
+                      breed.origin!,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             const SizedBox(height: 16),
+
+            // discription
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              width: double.infinity,
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(15),
@@ -33,114 +105,121 @@ class BreedDetailScreen extends StatelessWidget {
                   Text(
                     'Bio',
                     style: TextStyle(
-                      fontSize: 14,
                       fontWeight: FontWeight.bold,
                       color: Colors.pink[100],
+                      fontSize: 14,
                     ),
                   ),
                   const SizedBox(height: 6),
                   Text(
                     breed.description ?? 'No description',
                     style: const TextStyle(
-                      color: Colors.black,
                       fontSize: 16,
-                      fontWeight: FontWeight.normal,
+                      color: Colors.black,
                     ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 10),
-            Container(
-              margin: const EdgeInsets.only(top: 16),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(15),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Adaptability',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.pink[100],
-                      fontSize: 14,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: List.generate(5, (index) {
-                      int rating = breed.adaptability ?? 0;
-                      return Icon(
-                        Icons.star,
-                        color: index < rating ? Colors.amber : Colors.grey[300],
-                        size: 24,
-                      );
-                    }),
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              margin: const EdgeInsets.only(top: 16),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(15),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Intelligence',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.pink[100],
-                      fontSize: 14,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: List.generate(5, (index) {
-                      int rating = breed.intelligence ?? 0;
-                      return Icon(
-                        Icons.star,
-                        color: index < rating ? Colors.amber : Colors.grey[300],
-                        size: 24,
-                      );
-                    }),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 16),
+
+            // adaptability
+            _buildRatingContainer('Adaptability', breed.adaptability ?? 0),
+            const SizedBox(height: 16),
+
+            // intelligence
+            _buildRatingContainer('Intelligence', breed.intelligence ?? 0),
+            const SizedBox(height: 16),
+
+            // life span and weight
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _buildCharacteristic('Life span', breed.lifeSpan),
-                _buildCharacteristic('Weight', breed.weightMetric),
+                Expanded(
+                  child: _buildStatContainer('Life span', '${breed.lifeSpan} years'),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildStatContainer('Weight', '${breed.weightMetric} kg'),
+                ),
               ],
             ),
             const SizedBox(height: 16),
-            Text('Origin: ${breed.origin ?? "Unknown"}', style: const TextStyle(fontSize: 14)),
-            Text('Temperament: ${breed.temperament ?? "Unknown"}', style: const TextStyle(fontSize: 14)),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildCharacteristic(String name, dynamic value) {
-    return Column(
-      children: [
-        Text(name, style: const TextStyle(fontWeight: FontWeight.bold)),
-        const SizedBox(height: 4),
-        Text(value?.toString() ?? 'N/A'),
-      ],
+  Widget _buildRatingContainer(String title, int rating) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.pink[100],
+              fontSize: 14,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: List.generate(5, (index) {
+              return Icon(
+                Icons.star,
+                color: index < rating ? Colors.amber : Colors.grey[300],
+                size: 24,
+              );
+            }),
+          ),
+        ],
+      ),
     );
   }
+
+  Widget _buildStatContainer(String title, String? value) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.pink[100],
+              fontSize: 14,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            value ?? 'N/A',
+            style: const TextStyle(
+              fontSize: 18,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+ String countryCodeToEmoji(String countryCode) {
+  final code = countryCode.toUpperCase();
+  if (code.length != 2) return '';
+  return String.fromCharCodes([
+    code.codeUnitAt(0) + 0x1F1E6 - 65,
+    code.codeUnitAt(1) + 0x1F1E6 - 65,
+  ]);
 }
