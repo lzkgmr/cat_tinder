@@ -109,7 +109,7 @@ Widget build(BuildContext context) {
                 ),
                 const SizedBox(width: 12),
                 const Text(
-                  'котики',
+                  'pussycats',
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
