@@ -23,14 +23,7 @@ class _BreedListScreenState extends State<BreedListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Cat Breeds',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        backgroundColor: const Color.fromARGB(255, 242, 242, 242),
-        elevation: 0,
-      ),
+      appBar: _buildAppBar(),
       backgroundColor: const Color.fromARGB(255, 242, 242, 242),
       body: FutureBuilder<List<Breed>>(
         future: futureBreeds,
@@ -38,9 +31,8 @@ class _BreedListScreenState extends State<BreedListScreen> {
           if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
           }
-
           final breeds = snapshot.data!;
-
+  
           return ListView.separated(
             padding: const EdgeInsets.all(16),
             itemCount: breeds.length,
@@ -50,65 +42,17 @@ class _BreedListScreenState extends State<BreedListScreen> {
 
               return GestureDetector(
                 onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => BreedDetailScreen(
-                        breed: breed,
-                        imageWidget: Image.network(
-                          breed.imageUrl ?? '',
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    ),
-                  );
+                  _onTapCell(context, breed);
                 },
                 child: Container(
                   height: 120,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color.fromARGB(102, 0, 0, 0),
-                        blurRadius: 6,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
+                  decoration: 
+                    _buildDecoration(),
                   child: Row(
                     children: [
-                      ClipRRect(
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(16),
-                          bottomLeft: Radius.circular(16),
-                        ),
-                        child: Image.network(
-                          breed.imageUrl ?? '',
-                          width: 120,
-                          height: 120,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, _, _) => Container(
-                            width: 120,
-                            height: 120,
-                            color: Colors.grey[200],
-                            child: const Icon(Icons.image_not_supported),
-                          ),
-                        ),
-                      ),
-
+                      _buildPic(breed.imageUrl ?? ''),
                       const SizedBox(width: 12),
-
-                      // Название породы
-                      Expanded(
-                        child: Text(
-                          breed.name,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
+                      _buildBreedName(breed.name),
                     ],
                   ),
                 ),
@@ -119,4 +63,77 @@ class _BreedListScreenState extends State<BreedListScreen> {
       ),
     );
   }
+}
+
+AppBar _buildAppBar() {
+  return AppBar(
+    title: const Text(
+      'Cat Breeds',
+      style: TextStyle(fontWeight: FontWeight.bold),
+    ),
+    backgroundColor: const Color.fromARGB(255, 242, 242, 242),
+    elevation: 0,
+  );
+}
+
+Future _onTapCell(BuildContext context, Breed breed) async {
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) => BreedDetailScreen(
+        breed: breed,
+        imageWidget: Image.network(
+          breed.imageUrl ?? '',
+          fit: BoxFit.cover,
+        ),
+      ),
+    ),
+  );
+  }
+
+BoxDecoration _buildDecoration() {
+  return BoxDecoration(
+    color: Colors.white,
+    borderRadius: BorderRadius.circular(16),
+    boxShadow: [
+      BoxShadow(
+        color: const Color.fromARGB(102, 0, 0, 0),
+        blurRadius: 6,
+        offset: const Offset(0, 3),
+      ),
+    ],
+  );
+}
+
+Widget _buildPic(String url) {
+  return ClipRRect(
+    borderRadius: const BorderRadius.only(
+      topLeft: Radius.circular(16),
+      bottomLeft: Radius.circular(16),
+    ),
+    child: Image.network(
+      url,
+      width: 120,
+      height: 120,
+      fit: BoxFit.cover,
+      errorBuilder: (_, _, _) => Container(
+        width: 120,
+        height: 120,
+        color: Colors.grey[200],
+        child: const Icon(Icons.image_not_supported),
+      ),
+    ),
+  );
+}
+
+Widget _buildBreedName(String breedName) {
+  return Expanded(
+    child: Text(
+      breedName,
+      style: const TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.w600,
+      ),
+    ),
+  );
 }
