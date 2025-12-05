@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cat_tinder/screens/breeds_list_screen.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
@@ -11,14 +12,15 @@ class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
 
   @override
-  _MainScreenState createState() => _MainScreenState();
+  MainScreenState createState() => MainScreenState();
 }
 
-class _MainScreenState extends State<MainScreen>
+class MainScreenState extends State<MainScreen>
     with SingleTickerProviderStateMixin {
   final CatApiService api = CatApiService(
-      apiKey:
-          'live_K7HtYPDK7wAbiddICuTClSn5wwHOj91lvCItPQ4cDQztwupQHk4IQynylyXu1daB');
+    apiKey:
+        'live_K7HtYPDK7wAbiddICuTClSn5wwHOj91lvCItPQ4cDQztwupQHk4IQynylyXu1daB',
+  );
   final List<Cat> _cats = [];
   final List<Cat> _likedCats = [];
   final CardSwiperController _cardSwiperController = CardSwiperController();
@@ -50,8 +52,9 @@ class _MainScreenState extends State<MainScreen>
     }
   }
 
-  Cat? get currentCat =>
-      (_cats.isNotEmpty && currentIndex < _cats.length) ? _cats[currentIndex] : null;
+  Cat? get currentCat => (_cats.isNotEmpty && currentIndex < _cats.length)
+      ? _cats[currentIndex]
+      : null;
 
   void _onLike() {
     setState(() => likes++);
@@ -71,187 +74,222 @@ class _MainScreenState extends State<MainScreen>
     final breed = await api.fetchBreedById(cat.breedId);
     if (breed == null || cat.imageUrl.isEmpty) return;
 
+    if (!mounted) return;
+
     Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (_) => BreedDetailScreen(
-        breed: breed,
-        imageWidget: CachedNetworkImage(imageUrl: cat.imageUrl),
+      context,
+      MaterialPageRoute(
+        builder: (_) => BreedDetailScreen(
+          breed: breed,
+          imageWidget: CachedNetworkImage(imageUrl: cat.imageUrl),
+        ),
       ),
-    ),
-  );
+    );
   }
 
-    @override
-Widget build(BuildContext context) {
-  final screenWidth = MediaQuery.of(context).size.width;
-  final screenHeight = MediaQuery.of(context).size.height;
+  Future _onTapPow() async {
 
-  return Scaffold(
-    body: Stack(
-      children: [
-        Container(
-          decoration: const BoxDecoration(
-            color: Color.fromARGB(255, 242, 242, 242)
-          ),
-        ),
+    if (!mounted) return;
+    
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => BreedListScreen()),
+    );
+  }
 
-        SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.only(left: 20, top: 10),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                SizedBox(
-                  width: 40,
-                  height: 40,
-                  child: Image.asset('assets/icons/cat_icon.png'),
-                ),
-                const SizedBox(width: 12),
-                const Text(
-                  'pussycats',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                    fontFamily: 'Pacifico',
-                  ),
-                ),
-              ],
+  @override
+  Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
+    return Scaffold(
+      body: Stack(
+        children: [
+          Container(
+            decoration: const BoxDecoration(
+              color: Color.fromARGB(255, 242, 242, 242),
             ),
           ),
-        ),
 
-        Positioned(
-          top: 120,
-          left: 0,
-          right: 0,
-          bottom: 40,
-          child: _cats.isEmpty
-              ? Center(child: Lottie.asset('assets/lottie/cat_loading.json'))
-              : CardSwiper(
-                  controller: _cardSwiperController,
-                  cardsCount: _cats.length,
-                  onSwipe: _onSwipe,
-                  onUndo: _onUndo,
-                  numberOfCardsDisplayed: 3,
-                  backCardOffset: const Offset(0, 40),
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  allowedSwipeDirection: const AllowedSwipeDirection.only(
-                      left: true, right: true),
-                  cardBuilder: (context, index, percentThresholdX,
-                      percentThresholdY) {
-                    final cat = _cats[index];
-                    return GestureDetector(
-                      onTap: () => _onTapImage(),
-                      child: Card(
-                        elevation: 4,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        color: Colors.pink[100],
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            ClipRRect(
-                              borderRadius: const BorderRadius.vertical(
-                                top: Radius.circular(15),
-                              ),
-                              child: Image.network(
-                                cat.imageUrl,
-                                width: double.infinity,
-                                height: screenHeight * 0.59,
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8.0, vertical: 6),
-                              child: Text(
-                                cat.breed,
-                                style: const TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.only(
-                                  left: 16, right: 16, bottom: 0),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceEvenly,
-                                children: [
-                                  SizedBox(
-                                    width: screenWidth * 0.3,
-                                    child: DislikeButton(
-                                        onPressed: _onDislike),
-                                  ),
-                                  SizedBox(
-                                    width: screenWidth * 0.3,
-                                    child:
-                                        LikeButton(onPressed: _onLike),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                ),
-        ),
-      ],
-    ),
-    bottomNavigationBar: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const Divider(height: 1, color: Color.fromARGB(255, 242, 242, 242)),
-        BottomAppBar(
-          color: Colors.white,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              IconButton(
-                icon:
-                    const Icon(Icons.person, color: Colors.pinkAccent, size: 36),
-                onPressed: _onTapImage,
-              ),
-              Stack(
-                alignment: Alignment.center,
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.only(left: 20, top: 10),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  IconButton(
-                    icon: const Icon(Icons.favorite,
-                        color: Colors.pinkAccent, size: 30),
-                    onPressed: _onTapImage,
+                  SizedBox(
+                    width: 40,
+                    height: 40,
+                    child: Image.asset('assets/icons/cat_icon.png'),
                   ),
-                  Positioned(
-                    top: 2,
-                    right: 4,
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: Colors.pinkAccent,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        '$likes',
-                        style: const TextStyle(
-                            fontSize: 12, color: Colors.white),
-                      ),
+                  const SizedBox(width: 12),
+                  const Text(
+                    'pussycats',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                      fontFamily: 'Pacifico',
                     ),
                   ),
                 ],
               ),
-            ],
+            ),
           ),
-        ),
-      ],
-    ),
-  );
-}
+
+          Positioned(
+            top: 120,
+            left: 0,
+            right: 0,
+            bottom: 40,
+            child: _cats.isEmpty
+                ? Center(child: Lottie.asset('assets/lottie/cat_loading.json'))
+                : CardSwiper(
+                    controller: _cardSwiperController,
+                    cardsCount: _cats.length,
+                    onSwipe: _onSwipe,
+                    onUndo: _onUndo,
+                    numberOfCardsDisplayed: 3,
+                    backCardOffset: const Offset(0, 40),
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    allowedSwipeDirection: const AllowedSwipeDirection.only(
+                      left: true,
+                      right: true,
+                    ),
+                    cardBuilder:
+                        (context, index, percentThresholdX, percentThresholdY) {
+                          final cat = _cats[index];
+                          return GestureDetector(
+                            onTap: () => _onTapImage(),
+                            child: Card(
+                              elevation: 4,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(15),
+                              ),
+                              color: Colors.pink[100],
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: const BorderRadius.vertical(
+                                      top: Radius.circular(15),
+                                    ),
+                                    child: Image.network(
+                                      cat.imageUrl,
+                                      width: double.infinity,
+                                      height: screenHeight * 0.59,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8.0,
+                                      vertical: 6,
+                                    ),
+                                    child: Text(
+                                      cat.breed,
+                                      style: const TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.only(
+                                      left: 16,
+                                      right: 16,
+                                      bottom: 0,
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceEvenly,
+                                      children: [
+                                        SizedBox(
+                                          width: screenWidth * 0.3,
+                                          child: DislikeButton(
+                                            onPressed: _onDislike,
+                                          ),
+                                        ),
+                                        SizedBox(
+                                          width: screenWidth * 0.3,
+                                          child: LikeButton(onPressed: _onLike),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                  ),
+          ),
+        ],
+      ),
+      bottomNavigationBar: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Divider(height: 1, color: Color.fromARGB(255, 242, 242, 242)),
+          BottomAppBar(
+            color: Color.fromARGB(255, 242, 242, 242),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                IconButton(
+                  icon: const Icon(
+                    Icons.person,
+                    color: Colors.pinkAccent,
+                    size: 36,
+                  ),
+                  onPressed: _onTapImage,
+                ),
+                IconButton(
+                  icon: const Icon(
+                    Icons.pets,
+                    color: Colors.pinkAccent,
+                    size: 36,
+                  ),
+                  onPressed: _onTapPow,
+                ),
+                Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    IconButton(
+                      icon: const Icon(
+                        Icons.favorite,
+                        color: Colors.pinkAccent,
+                        size: 36,
+                      ),
+                      onPressed: _onTapImage,
+                    ),
+                    Positioned(
+                      top: 2,
+                      right: 4,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: Colors.pinkAccent,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          '$likes',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   bool _onSwipe(
     int previousIndex,
@@ -286,8 +324,7 @@ Widget build(BuildContext context) {
     });
     return true;
   }
-
-  }
+}
 
 class DislikeButton extends StatelessWidget {
   final VoidCallback onPressed;

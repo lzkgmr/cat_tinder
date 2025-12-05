@@ -36,10 +36,16 @@ class Breed {
       weightMetric: json['weight'] != null && json['weight']['metric'] != null
           ? json['weight']['metric'] as String
           : null,
-      adaptability: json['adaptability'] is int ? json['adaptability'] as int : null,
-      intelligence: json['intelligence'] is int ? json['intelligence'] as int : null,
-      imageUrl: json['image'] != null ? (json['image']['url'] as String?) : null,
-      countryCode: json['country_code'] as String?
+      adaptability: json['adaptability'] is int
+          ? json['adaptability'] as int
+          : null,
+      intelligence: json['intelligence'] is int
+          ? json['intelligence'] as int
+          : null,
+      imageUrl: json['reference_image_id'] != null
+          ? 'https://cdn2.thecatapi.com/images/${json['reference_image_id']}.jpg'
+          : null,
+      countryCode: json['country_code'] as String?,
     );
   }
 }

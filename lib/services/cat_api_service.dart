@@ -14,10 +14,12 @@ class CatApiService {
   final Set<String> _loadedCatIds = {};
 
   CatApiService({this.apiKey, Connectivity? connectivity})
-      : connectivity = connectivity ?? Connectivity();
+    : connectivity = connectivity ?? Connectivity();
 
   Future<List<Cat>> fetchCats({int limit = 10}) async {
     final connectivityResult = await connectivity.checkConnectivity();
+    
+    // ignore: unrelated_type_equality_checks
     if (connectivityResult == ConnectivityResult.none) {
       throw Exception('No internet connection');
     }
@@ -66,7 +68,9 @@ class CatApiService {
           if (cats.isEmpty) throw Exception('No cats with breed info found');
           return cats;
         } else {
-          if (kDebugMode) print('HTTP ${response.statusCode}: ${response.body}');
+          if (kDebugMode) {
+            print('HTTP ${response.statusCode}: ${response.body}');
+          }
         }
       } catch (e) {
         if (kDebugMode) print('Attempt $attempts failed: $e');
@@ -126,7 +130,8 @@ class CatApiService {
 
   Future<List<Breed>> fetchBreeds() async {
     int attempts = 0;
-
+    // breeds with 403 error trying to get images
+    final excludedIds = {'asho', 'beng', 'drex', 'ebur', 'kora', 'mala'};
     while (attempts < 5) {
       try {
         final response = await http.get(
@@ -136,6 +141,7 @@ class CatApiService {
 
         if (response.statusCode == 200) {
           final List<dynamic> data = json.decode(response.body);
+
           final List<Breed> breeds = data.map((item) {
             return Breed(
               id: item['id'] ?? '',
@@ -144,19 +150,29 @@ class CatApiService {
               temperament: item['temperament'] ?? 'No temperament info',
               origin: item['origin'] ?? 'Unknown origin',
               lifeSpan: item['life_span'] ?? 'Unknown',
-              weightMetric: item['weight'] != null && item['weight']['metric'] != null
-                  ? item['weight']['metric']
+              weightMetric: item['weight']?['metric'],
+              adaptability: item['adaptability'] is int
+                  ? item['adaptability'] as int
                   : null,
-              adaptability: item['adaptability'] is int ? item['adaptability'] as int : null,
-              intelligence: item['intelligence'] is int ? item['intelligence'] as int : null,
-              imageUrl: item['image'] != null ? (item['image']['url'] as String?) : null,
+              intelligence: item['intelligence'] is int
+                  ? item['intelligence'] as int
+                  : null,
+              imageUrl: item['reference_image_id'] != null
+                  ? 'https://cdn2.thecatapi.com/images/${item['reference_image_id']}.jpg'
+                  : null,
               countryCode: item['country_code'] ?? '',
             );
           }).toList();
 
-          return breeds;
+          final filtered = breeds
+              .where((b) => !excludedIds.contains(b.id))
+              .toList();
+
+          return filtered;
         } else {
-          if (kDebugMode) print('HTTP ${response.statusCode}: ${response.body}');
+          if (kDebugMode) {
+            print('HTTP ${response.statusCode}: ${response.body}');
+          }
         }
       } catch (e) {
         if (kDebugMode) print('Attempt $attempts to load breeds failed: $e');
@@ -167,7 +183,6 @@ class CatApiService {
 
     throw Exception('Failed to load breeds after multiple attempts');
   }
-
 
   Future<Breed?> fetchBreedById(String id) async {
     final breeds = await fetchBreeds();
