@@ -28,136 +28,149 @@ class BreedDetailScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // cat pic
-            ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: imageWidget,
-            ),
+            _buildPic(),
             const SizedBox(height: 12),
 
-            // temperaments
             if (breed.temperament != null)
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                alignment: WrapAlignment.start,
-                children: breed.temperament!
-                    .split(',')
-                    .map(
-                      (temp) => Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          temp.trim(),
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.pinkAccent,
-                          ),
-                        ),
-                      ),
-                    )
-                    .toList(),
-              ),
+            _buildTemps(),
             const SizedBox(height: 12),
 
-            // origin
             if (breed.origin != null)
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                child: Row(
-                  children: [
-                    // flag
-                    Text(
-                      countryCodeToEmoji(breed.countryCode ?? ''), // ← флаг
-                      style: const TextStyle(fontSize: 20),
-                    ),
-                    const SizedBox(width: 12),
-                    // country name
-                    Text(
-                      breed.origin!,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              _buildOrigin(),
             const SizedBox(height: 16),
 
-            // discription
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(15),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Bio',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.pink[100],
-                      fontSize: 14,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    breed.description ?? 'No description',
-                    style: const TextStyle(fontSize: 16, color: Colors.black),
-                  ),
-                ],
-              ),
-            ),
+            _buildDescription(),
             const SizedBox(height: 16),
 
-            // adaptability
             _buildRatingContainer('Adaptability', breed.adaptability ?? 0),
             const SizedBox(height: 16),
 
-            // intelligence
             _buildRatingContainer('Intelligence', breed.intelligence ?? 0),
             const SizedBox(height: 16),
 
-            // life span and weight
-            Row(
-              children: [
-                Expanded(
-                  child: _buildStatContainer(
-                    'Life span',
-                    '${breed.lifeSpan} years',
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildStatContainer(
-                    'Weight',
-                    '${breed.weightMetric} kg',
-                  ),
-                ),
-              ],
-            ),
+            _buildLifeSpanAndWeight(),
             const SizedBox(height: 16),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildPic() {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: imageWidget,
+    );
+  }
+
+  Widget _buildTemps() {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      alignment: WrapAlignment.start,
+      children: breed.temperament!
+          .split(',')
+          .map(
+            (temp) => Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 6,
+              ),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                temp.trim(),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.pinkAccent,
+                ),
+              ),
+            ),
+          )
+          .toList(),
+    );
+  }
+
+  Widget _buildOrigin() {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: 12,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: Row(
+        children: [
+          // flag
+          Text(
+            countryCodeToEmoji(breed.countryCode ?? ''), // ← флаг
+            style: const TextStyle(fontSize: 20),
+          ),
+          const SizedBox(width: 12),
+          // country name
+          Text(
+            breed.origin!,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDescription() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Bio',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.pink[100],
+              fontSize: 14,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            breed.description ?? 'No description',
+            style: const TextStyle(fontSize: 16, color: Colors.black),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLifeSpanAndWeight() {
+    return Row(
+      children: [
+        Expanded(
+          child: _buildStatContainer(
+            'Life span',
+            '${breed.lifeSpan} years',
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _buildStatContainer(
+            'Weight',
+            '${breed.weightMetric} kg',
+          ),
+        ),
+      ],
     );
   }
 

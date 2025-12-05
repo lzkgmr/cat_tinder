@@ -24,28 +24,4 @@ class Breed {
     this.imageUrl,
     this.countryCode,
   });
-
-  factory Breed.fromJson(Map<String, dynamic> json) {
-    return Breed(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      temperament: json['temperament'] as String?,
-      origin: json['origin'] as String?,
-      description: json['description'] as String?,
-      lifeSpan: json['life_span'] as String?,
-      weightMetric: json['weight'] != null && json['weight']['metric'] != null
-          ? json['weight']['metric'] as String
-          : null,
-      adaptability: json['adaptability'] is int
-          ? json['adaptability'] as int
-          : null,
-      intelligence: json['intelligence'] is int
-          ? json['intelligence'] as int
-          : null,
-      imageUrl: json['reference_image_id'] != null
-          ? 'https://cdn2.thecatapi.com/images/${json['reference_image_id']}.jpg'
-          : null,
-      countryCode: json['country_code'] as String?,
-    );
-  }
 }
