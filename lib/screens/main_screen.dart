@@ -52,14 +52,14 @@ class MainScreenState extends State<MainScreen>
 
   Future<void> _loadCats() async {
     try {
-      List<Cat> cats = await api.fetchCats();
-      setState(() {
-        _cats.addAll(cats);
-      });
-    } catch (e) {
-      if (kDebugMode) {
-        print('Error loading cats: $e');
+      await for (final cat in api.fetchCatsStream(limit: 10)) {
+        if (!mounted) return;
+        setState(() {
+          _cats.add(cat);
+        });
       }
+    } catch (e) {
+      if (kDebugMode) print('Error loading cats: $e');
     }
   }
 
@@ -196,7 +196,7 @@ class MainScreenState extends State<MainScreen>
           cardsCount: _cats.length,
           onSwipe: _onSwipe,
           onUndo: _onUndo,
-          numberOfCardsDisplayed: 3,
+          numberOfCardsDisplayed: _cats.length >= 3 ? 3 : _cats.length,
           backCardOffset: const Offset(0, 40),
           padding: const EdgeInsets.symmetric(horizontal: 24),
           allowedSwipeDirection: const AllowedSwipeDirection.only(
