@@ -1,6 +1,6 @@
-# cat_tinder
+# pussycats - Cat Tinder
 
-A new Flutter project.
+An app for searching cat photos and learning about breeds.
 
 ## Getting Started
 
