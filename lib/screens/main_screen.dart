@@ -90,7 +90,7 @@ class MainScreenState extends State<MainScreen>
   Future _onTapPow() async {
 
     if (!mounted) return;
-    
+
     Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => BreedListScreen()),
