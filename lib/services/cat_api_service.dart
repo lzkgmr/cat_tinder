@@ -104,7 +104,6 @@ class CatApiService {
               temperament: breed['temperament'] ?? 'No temperament info',
               origin: breed['origin'] ?? 'Unknown origin',
               lifeSpan: breed['life_span'] ?? 'Unknown',
-              wikipediaUrl: breed['wikipedia_url'] ?? '',
               breedId: breed['id'] ?? '',
             );
           }
@@ -123,7 +122,6 @@ class CatApiService {
       temperament: 'Не удалось загрузить',
       origin: 'Не удалось загрузить',
       lifeSpan: 'Не удалось загрузить',
-      wikipediaUrl: '',
       breedId: '',
     );
   }

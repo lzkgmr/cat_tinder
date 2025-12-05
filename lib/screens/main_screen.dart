@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cat_tinder/screens/breeds_list_screen.dart';
+import 'package:cat_tinder/screens/liked_cats_screen.dart';
 import 'package:cat_tinder/services/storage_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -46,7 +47,7 @@ class MainScreenState extends State<MainScreen>
   Future<void> _initStorage() async {
     final prefs = await SharedPreferences.getInstance();
     _storage = StorageService(prefs);
-
+    
     setState(() {
       likes = _storage.getLikes();
     });
@@ -108,6 +109,27 @@ class MainScreenState extends State<MainScreen>
       MaterialPageRoute(builder: (_) => BreedListScreen()),
     );
   }
+
+  Future _onTapHeart() async {
+    if (!mounted) return;
+
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => LikedCatsScreen(storage: _storage),
+      ),
+    );
+
+    if (!mounted) return;
+
+    setState(() {
+      likes = _storage.getLikes();
+      _likedCats
+        ..clear()
+        ..addAll(_storage.getLikedCats());
+    });
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -265,7 +287,7 @@ class MainScreenState extends State<MainScreen>
                         color: Colors.pinkAccent,
                         size: 36,
                       ),
-                      onPressed: _onTapImage,
+                      onPressed: _onTapHeart,
                     ),
                     Positioned(
                       top: 2,
@@ -305,6 +327,7 @@ class MainScreenState extends State<MainScreen>
         likes++;
         _storage.setLikes(likes);
         _likedCats.add(_cats[previousIndex]);
+        _storage.addLikedCat(_cats[previousIndex]);
       }
 
       if (currentIndex != null) {

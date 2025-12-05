@@ -6,7 +6,6 @@ class Cat {
   final String temperament;
   final String origin;
   final String lifeSpan;
-  final String wikipediaUrl;
   final String breedId;
 
   Cat({
@@ -17,7 +16,32 @@ class Cat {
     required this.temperament,
     required this.origin,
     required this.lifeSpan,
-    required this.wikipediaUrl,
     required this.breedId,
   });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'imageUrl': imageUrl,
+      'breed': breed,
+      'description': description,
+      'temperament': temperament,
+      'origin': origin,
+      'lifeSpan': lifeSpan,
+      'breedId': breedId,
+    };
+  }
+
+  factory Cat.fromJson(Map<String, dynamic> json) {
+    return Cat(
+      id: json['id'],
+      imageUrl: json['imageUrl'],
+      breed: json['breed'],
+      description: json['description'],
+      temperament: json['temperament'],
+      origin: json['origin'],
+      lifeSpan: json['lifeSpan'],
+      breedId: json['breedId'],
+    );
+  }
 }
