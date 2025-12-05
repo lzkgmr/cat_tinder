@@ -1,8 +1,10 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cat_tinder/screens/breeds_list_screen.dart';
+import 'package:cat_tinder/services/storage_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/cat_api_service.dart';
 import '../models/cat.dart';
 import 'breed_detail_screen.dart';
@@ -24,6 +26,7 @@ class MainScreenState extends State<MainScreen>
   final List<Cat> _cats = [];
   final List<Cat> _likedCats = [];
   final CardSwiperController _cardSwiperController = CardSwiperController();
+  late StorageService _storage;
   int currentIndex = 0;
   int likes = 0;
 
@@ -36,7 +39,17 @@ class MainScreenState extends State<MainScreen>
   @override
   void initState() {
     super.initState();
+    _initStorage();
     _loadCats();
+  }
+
+  Future<void> _initStorage() async {
+    final prefs = await SharedPreferences.getInstance();
+    _storage = StorageService(prefs);
+
+    setState(() {
+      likes = _storage.getLikes();
+    });
   }
 
   Future<void> _loadCats() async {
@@ -57,7 +70,6 @@ class MainScreenState extends State<MainScreen>
       : null;
 
   void _onLike() {
-    setState(() => likes++);
     _cardSwiperController.swipe(CardSwiperDirection.right);
   }
 
@@ -238,14 +250,6 @@ class MainScreenState extends State<MainScreen>
               children: [
                 IconButton(
                   icon: const Icon(
-                    Icons.person,
-                    color: Colors.pinkAccent,
-                    size: 36,
-                  ),
-                  onPressed: _onTapImage,
-                ),
-                IconButton(
-                  icon: const Icon(
                     Icons.pets,
                     color: Colors.pinkAccent,
                     size: 36,
@@ -299,6 +303,7 @@ class MainScreenState extends State<MainScreen>
     setState(() {
       if (direction == CardSwiperDirection.right) {
         likes++;
+        _storage.setLikes(likes);
         _likedCats.add(_cats[previousIndex]);
       }
 
