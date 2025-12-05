@@ -43,20 +43,26 @@ class BreedDetailScreen extends StatelessWidget {
                 alignment: WrapAlignment.start,
                 children: breed.temperament!
                     .split(',')
-                    .map((temp) => Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(12),
+                    .map(
+                      (temp) => Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          temp.trim(),
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.pinkAccent,
                           ),
-                          child: Text(
-                            temp.trim(),
-                            style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.pinkAccent),
-                          ),
-                        ))
+                        ),
+                      ),
+                    )
                     .toList(),
               ),
             const SizedBox(height: 12),
@@ -64,7 +70,10 @@ class BreedDetailScreen extends StatelessWidget {
             // origin
             if (breed.origin != null)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(15),
@@ -73,7 +82,7 @@ class BreedDetailScreen extends StatelessWidget {
                   children: [
                     // flag
                     Text(
-                      countryCodeToEmoji(breed.countryCode ?? ""), // ← флаг
+                      countryCodeToEmoji(breed.countryCode ?? ''), // ← флаг
                       style: const TextStyle(fontSize: 20),
                     ),
                     const SizedBox(width: 12),
@@ -93,8 +102,7 @@ class BreedDetailScreen extends StatelessWidget {
             // discription
             Container(
               width: double.infinity,
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(15),
@@ -113,10 +121,7 @@ class BreedDetailScreen extends StatelessWidget {
                   const SizedBox(height: 6),
                   Text(
                     breed.description ?? 'No description',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      color: Colors.black,
-                    ),
+                    style: const TextStyle(fontSize: 16, color: Colors.black),
                   ),
                 ],
               ),
@@ -135,11 +140,17 @@ class BreedDetailScreen extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: _buildStatContainer('Life span', '${breed.lifeSpan} years'),
+                  child: _buildStatContainer(
+                    'Life span',
+                    '${breed.lifeSpan} years',
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: _buildStatContainer('Weight', '${breed.weightMetric} kg'),
+                  child: _buildStatContainer(
+                    'Weight',
+                    '${breed.weightMetric} kg',
+                  ),
                 ),
               ],
             ),
@@ -203,19 +214,14 @@ class BreedDetailScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          Text(
-            value ?? 'N/A',
-            style: const TextStyle(
-              fontSize: 18,
-            ),
-          ),
+          Text(value ?? 'N/A', style: const TextStyle(fontSize: 18)),
         ],
       ),
     );
   }
 }
 
- String countryCodeToEmoji(String countryCode) {
+String countryCodeToEmoji(String countryCode) {
   final code = countryCode.toUpperCase();
   if (code.length != 2) return '';
   return String.fromCharCodes([
