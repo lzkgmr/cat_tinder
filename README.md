@@ -1,7 +1,7 @@
 # pussycats - Cat Tinder
 
 An app for searching cat photos and learning about breeds.  
-[Download APK](https://github.com/lzkgmr/cat_tinder/releases/download/meow/app-release.apk)
+[Download APK](https://github.com/lzkgmr/cat_tinder/releases/download/v0.0.meow/app-release.apk)
 
 ## What's in the app?
 
@@ -14,7 +14,9 @@ Tinder mechanics with cat selection. Information is loaded from `TheCatAPI.com`.
 
 User can **swipe right and left** or **use buttons**. If user likes the cat, he can mark it and likes counter will increase. 
 
-<img src="assets/images/tinder.png" height="400">
+Btw, UI is fine on big and small phones.
+
+<img src="assets/images/tinder.png" height="400"> <img src="assets/images/small_smartphone.png" height="400">
 
 ### 3. Breed list
 If user taps on `Pow Button` on main screen, he will see **Breed list**. 
