@@ -36,7 +36,7 @@ class StorageService {
     final updatedCats = currentCats.where((c) => c.id != catId).toList();
     final jsonList = updatedCats.map((c) => json.encode(c.toJson())).toList();
     await _prefs.setStringList(_likedCatsKey, jsonList);
-    
+
     final currentLikes = getLikes();
     await setLikes(currentLikes - 1);
   }

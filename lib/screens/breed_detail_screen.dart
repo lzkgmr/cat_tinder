@@ -13,44 +13,43 @@ class BreedDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 242, 242, 242),
-      appBar: AppBar(
-        title: Text(
-          breed.name,
-          style: const TextStyle(fontWeight: FontWeight.w600),
-        ),
+    return GestureDetector(
+      onHorizontalDragUpdate: (details) {
+        if (details.delta.dx > 10) {
+          Navigator.of(context).pop();
+        }
+      },
+      child: Scaffold(
         backgroundColor: const Color.fromARGB(255, 242, 242, 242),
-        elevation: 0,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildPic(),
-            const SizedBox(height: 12),
-
-            if (breed.temperament != null)
-            _buildTemps(),
-            const SizedBox(height: 12),
-
-            if (breed.origin != null)
-              _buildOrigin(),
-            const SizedBox(height: 16),
-
-            _buildDescription(),
-            const SizedBox(height: 16),
-
-            _buildRatingContainer('Adaptability', breed.adaptability ?? 0),
-            const SizedBox(height: 16),
-
-            _buildRatingContainer('Intelligence', breed.intelligence ?? 0),
-            const SizedBox(height: 16),
-
-            _buildLifeSpanAndWeight(),
-            const SizedBox(height: 16),
-          ],
+        appBar: AppBar(
+          title: Text(
+            breed.name,
+            style: const TextStyle(fontWeight: FontWeight.w600),
+          ),
+          backgroundColor: const Color.fromARGB(255, 242, 242, 242),
+          elevation: 0,
+        ),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildPic(),
+              const SizedBox(height: 12),
+              if (breed.temperament != null) _buildTemps(),
+              const SizedBox(height: 12),
+              if (breed.origin != null) _buildOrigin(),
+              const SizedBox(height: 16),
+              _buildDescription(),
+              const SizedBox(height: 16),
+              _buildRatingContainer('Adaptability', breed.adaptability ?? 0),
+              const SizedBox(height: 16),
+              _buildRatingContainer('Intelligence', breed.intelligence ?? 0),
+              const SizedBox(height: 16),
+              _buildLifeSpanAndWeight(),
+              const SizedBox(height: 16),
+            ],
+          ),
         ),
       ),
     );
@@ -72,10 +71,7 @@ class BreedDetailScreen extends StatelessWidget {
           .split(',')
           .map(
             (temp) => Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 6,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(12),
@@ -96,10 +92,7 @@ class BreedDetailScreen extends StatelessWidget {
 
   Widget _buildOrigin() {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 16,
-        vertical: 12,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(15),
@@ -115,10 +108,7 @@ class BreedDetailScreen extends StatelessWidget {
           // country name
           Text(
             breed.origin!,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
           ),
         ],
       ),
@@ -158,17 +148,11 @@ class BreedDetailScreen extends StatelessWidget {
     return Row(
       children: [
         Expanded(
-          child: _buildStatContainer(
-            'Life span',
-            '${breed.lifeSpan} years',
-          ),
+          child: _buildStatContainer('Life span', '${breed.lifeSpan} years'),
         ),
         const SizedBox(width: 12),
         Expanded(
-          child: _buildStatContainer(
-            'Weight',
-            '${breed.weightMetric} kg',
-          ),
+          child: _buildStatContainer('Weight', '${breed.weightMetric} kg'),
         ),
       ],
     );

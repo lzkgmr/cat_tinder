@@ -22,44 +22,50 @@ class _BreedListScreenState extends State<BreedListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: _buildAppBar(),
-      backgroundColor: const Color.fromARGB(255, 242, 242, 242),
-      body: FutureBuilder<List<Breed>>(
-        future: futureBreeds,
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          final breeds = snapshot.data!;
-  
-          return ListView.separated(
-            padding: const EdgeInsets.all(16),
-            itemCount: breeds.length,
-            separatorBuilder: (_, _) => const SizedBox(height: 12),
-            itemBuilder: (context, index) {
-              final breed = breeds[index];
+    return GestureDetector(
+      onHorizontalDragUpdate: (details) {
+        if (details.delta.dx > 10) {
+          Navigator.of(context).pop();
+        }
+      },
+      child: Scaffold(
+        appBar: _buildAppBar(),
+        backgroundColor: const Color.fromARGB(255, 242, 242, 242),
+        body: FutureBuilder<List<Breed>>(
+          future: futureBreeds,
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            final breeds = snapshot.data!;
 
-              return GestureDetector(
-                onTap: () {
-                  _onTapCell(context, breed);
-                },
-                child: Container(
-                  height: 120,
-                  decoration: 
-                    _buildDecoration(),
-                  child: Row(
-                    children: [
-                      _buildPic(breed.imageUrl ?? ''),
-                      const SizedBox(width: 12),
-                      _buildBreedName(breed.name),
-                    ],
+            return ListView.separated(
+              padding: const EdgeInsets.all(16),
+              itemCount: breeds.length,
+              separatorBuilder: (_, _) => const SizedBox(height: 12),
+              itemBuilder: (context, index) {
+                final breed = breeds[index];
+
+                return GestureDetector(
+                  onTap: () {
+                    _onTapCell(context, breed);
+                  },
+                  child: Container(
+                    height: 120,
+                    decoration: _buildDecoration(),
+                    child: Row(
+                      children: [
+                        _buildPic(breed.imageUrl ?? ''),
+                        const SizedBox(width: 12),
+                        _buildBreedName(breed.name),
+                      ],
+                    ),
                   ),
-                ),
-              );
-            },
-          );
-        },
+                );
+              },
+            );
+          },
+        ),
       ),
     );
   }
@@ -82,14 +88,11 @@ Future _onTapCell(BuildContext context, Breed breed) async {
     MaterialPageRoute(
       builder: (_) => BreedDetailScreen(
         breed: breed,
-        imageWidget: Image.network(
-          breed.imageUrl ?? '',
-          fit: BoxFit.cover,
-        ),
+        imageWidget: Image.network(breed.imageUrl ?? '', fit: BoxFit.cover),
       ),
     ),
   );
-  }
+}
 
 BoxDecoration _buildDecoration() {
   return BoxDecoration(
@@ -130,10 +133,7 @@ Widget _buildBreedName(String breedName) {
   return Expanded(
     child: Text(
       breedName,
-      style: const TextStyle(
-        fontSize: 18,
-        fontWeight: FontWeight.w600,
-      ),
+      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
     ),
   );
 }
