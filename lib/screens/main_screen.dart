@@ -230,17 +230,20 @@ class MainScreenState extends State<MainScreen>
 
   Widget _buildPic(double screenHeight, String url) {
     return ClipRRect(
-      borderRadius: const BorderRadius.vertical(
-        top: Radius.circular(15),
-      ),
-      child: Image.network(
-        url,
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
+      child: CachedNetworkImage(
+        imageUrl: url,
         width: double.infinity,
         height: screenHeight * 0.59,
         fit: BoxFit.cover,
+        placeholder: (context, _) =>
+            Container(color: Colors.grey[300]),
+        errorWidget: (context, _, _) =>
+            const Icon(Icons.error),
       ),
     );
   }
+
 
   Widget _buildName(String catBreed) {
     return Padding(
@@ -348,25 +351,34 @@ class MainScreenState extends State<MainScreen>
     int? currentIndex,
     CardSwiperDirection direction,
   ) {
-    setState(() {
-      if (direction == CardSwiperDirection.right) {
-        likes++;
-        _storage.setLikes(likes);
-        _likedCats.add(_cats[previousIndex]);
-        _storage.addLikedCat(_cats[previousIndex]);
-      }
+    final cat = _cats[previousIndex];
 
-      if (currentIndex != null) {
+    if (direction == CardSwiperDirection.right) {
+      setState(() {
+        likes++;
+        _likedCats.add(cat);
+      });
+
+      () async {
+        await _storage.setLikes(likes);
+        await _storage.addLikedCat(cat);
+      }();
+    }
+
+    if (currentIndex != null) {
+      setState(() {
         this.currentIndex = currentIndex;
-      }
-    });
+      });
+    }
 
     if (previousIndex % 10 > 3) {
+      // не в setState
       _loadCats();
     }
 
     return true;
   }
+
 
   bool _onUndo(
     int? previousIndex,
