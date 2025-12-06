@@ -144,12 +144,13 @@ class MainScreenState extends State<MainScreen>
           ),
 
           Positioned(
-            top: 120,
+            top: 80,
             left: 0,
             right: 0,
-            bottom: 40,
+            bottom: 0,
             child: _buildCard(screenHeight, screenWidth),
           ),
+
         ],
       ),
       bottomNavigationBar: Column(
@@ -212,11 +213,21 @@ class MainScreenState extends State<MainScreen>
                       ),
                       color: Colors.pink[100],
                       child: Column(
-                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          _buildPic(screenHeight, cat.imageUrl),
-                          _buildName(cat.breed),
-                          _buildButtons(screenWidth),
+                          Expanded(
+                            child: Column(
+                              children: [
+                                Expanded(
+                                  child: _buildPic(cat.imageUrl),
+                                ),
+                                _buildName(cat.breed),
+                              ],
+                            ),
+                          ),
+                          SizedBox(
+                            height: 72,
+                            child: _buildButtons(),
+                          ),
                         ],
                       ),
                     ),
@@ -225,19 +236,19 @@ class MainScreenState extends State<MainScreen>
           );
   }
 
-  Widget _buildPic(double screenHeight, String url) {
+  Widget _buildPic(String url) {
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
       child: CachedNetworkImage(
         imageUrl: url,
         width: double.infinity,
-        height: screenHeight * 0.59,
         fit: BoxFit.cover,
         placeholder: (context, _) => Container(color: Colors.grey[300]),
         errorWidget: (context, _, _) => const Icon(Icons.error),
       ),
     );
   }
+
 
   Widget _buildName(String catBreed) {
     return Padding(
@@ -253,24 +264,23 @@ class MainScreenState extends State<MainScreen>
     );
   }
 
-  Widget _buildButtons(double screenWidth) {
+  Widget _buildButtons() {
     return Padding(
-      padding: const EdgeInsets.only(left: 16, right: 16, bottom: 0),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          SizedBox(
-            width: screenWidth * 0.3,
-            child: DislikeButton(onPressed: _onDislike),
+          Expanded(
+            child: Center(child: DislikeButton(onPressed: _onDislike)),
           ),
-          SizedBox(
-            width: screenWidth * 0.3,
-            child: LikeButton(onPressed: _onLike),
+          Expanded(
+            child: Center(child: LikeButton(onPressed: _onLike)),
           ),
         ],
       ),
     );
   }
+
 
   Widget _buildBottomAppBar() {
     return BottomAppBar(
