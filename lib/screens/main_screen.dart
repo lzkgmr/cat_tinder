@@ -44,7 +44,7 @@ class MainScreenState extends State<MainScreen>
   Future<void> _initStorage() async {
     final prefs = await SharedPreferences.getInstance();
     _storage = StorageService(prefs);
-    
+
     setState(() {
       likes = _storage.getLikes();
     });
@@ -109,9 +109,7 @@ class MainScreenState extends State<MainScreen>
 
     await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) => LikedCatsScreen(storage: _storage),
-      ),
+      MaterialPageRoute(builder: (_) => LikedCatsScreen(storage: _storage)),
     );
 
     if (!mounted) return;
@@ -123,7 +121,6 @@ class MainScreenState extends State<MainScreen>
         ..addAll(_storage.getLikedCats());
     });
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -189,43 +186,43 @@ class MainScreenState extends State<MainScreen>
   }
 
   Widget _buildCard(double screenHeight, double screenWidth) {
-   return _cats.isEmpty
-      ? Center(child: Lottie.asset('assets/lottie/cat_loading.json'))
-      : CardSwiper(
-          controller: _cardSwiperController,
-          cardsCount: _cats.length,
-          onSwipe: _onSwipe,
-          onUndo: _onUndo,
-          numberOfCardsDisplayed: _cats.length >= 3 ? 3 : _cats.length,
-          backCardOffset: const Offset(0, 40),
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          allowedSwipeDirection: const AllowedSwipeDirection.only(
-            left: true,
-            right: true,
-          ),
-          cardBuilder:
-              (context, index, percentThresholdX, percentThresholdY) {
-                final cat = _cats[index];
-                return GestureDetector(
-                  onTap: () => _onTapImage(),
-                  child: Card(
-                    elevation: 4,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
+    return _cats.isEmpty
+        ? Center(child: Lottie.asset('assets/lottie/cat_loading.json'))
+        : CardSwiper(
+            controller: _cardSwiperController,
+            cardsCount: _cats.length,
+            onSwipe: _onSwipe,
+            onUndo: _onUndo,
+            numberOfCardsDisplayed: _cats.length >= 3 ? 3 : _cats.length,
+            backCardOffset: const Offset(0, 40),
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            allowedSwipeDirection: const AllowedSwipeDirection.only(
+              left: true,
+              right: true,
+            ),
+            cardBuilder:
+                (context, index, percentThresholdX, percentThresholdY) {
+                  final cat = _cats[index];
+                  return GestureDetector(
+                    onTap: () => _onTapImage(),
+                    child: Card(
+                      elevation: 4,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      color: Colors.pink[100],
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _buildPic(screenHeight, cat.imageUrl),
+                          _buildName(cat.breed),
+                          _buildButtons(screenWidth),
+                        ],
+                      ),
                     ),
-                    color: Colors.pink[100],
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _buildPic(screenHeight, cat.imageUrl),
-                        _buildName(cat.breed),
-                        _buildButtons(screenWidth)
-                      ],
-                    ),
-                  ),
-                );
-              },
-        );
+                  );
+                },
+          );
   }
 
   Widget _buildPic(double screenHeight, String url) {
@@ -236,21 +233,15 @@ class MainScreenState extends State<MainScreen>
         width: double.infinity,
         height: screenHeight * 0.59,
         fit: BoxFit.cover,
-        placeholder: (context, _) =>
-            Container(color: Colors.grey[300]),
-        errorWidget: (context, _, _) =>
-            const Icon(Icons.error),
+        placeholder: (context, _) => Container(color: Colors.grey[300]),
+        errorWidget: (context, _, _) => const Icon(Icons.error),
       ),
     );
   }
 
-
   Widget _buildName(String catBreed) {
     return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 8.0,
-        vertical: 6,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6),
       child: Text(
         catBreed,
         style: const TextStyle(
@@ -264,20 +255,13 @@ class MainScreenState extends State<MainScreen>
 
   Widget _buildButtons(double screenWidth) {
     return Padding(
-      padding: const EdgeInsets.only(
-        left: 16,
-        right: 16,
-        bottom: 0,
-      ),
+      padding: const EdgeInsets.only(left: 16, right: 16, bottom: 0),
       child: Row(
-        mainAxisAlignment:
-            MainAxisAlignment.spaceEvenly,
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           SizedBox(
             width: screenWidth * 0.3,
-            child: DislikeButton(
-              onPressed: _onDislike,
-            ),
+            child: DislikeButton(onPressed: _onDislike),
           ),
           SizedBox(
             width: screenWidth * 0.3,
@@ -293,21 +277,14 @@ class MainScreenState extends State<MainScreen>
       color: Color.fromARGB(255, 242, 242, 242),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildPowButton(),
-          _buildHeartButton()
-        ],
+        children: [_buildPowButton(), _buildHeartButton()],
       ),
     );
   }
 
   Widget _buildPowButton() {
     return IconButton(
-      icon: const Icon(
-        Icons.pets,
-        color: Colors.pinkAccent,
-        size: 36,
-      ),
+      icon: const Icon(Icons.pets, color: Colors.pinkAccent, size: 36),
       onPressed: _onTapPow,
     );
   }
@@ -317,11 +294,7 @@ class MainScreenState extends State<MainScreen>
       alignment: Alignment.center,
       children: [
         IconButton(
-          icon: const Icon(
-            Icons.favorite,
-            color: Colors.pinkAccent,
-            size: 36,
-          ),
+          icon: const Icon(Icons.favorite, color: Colors.pinkAccent, size: 36),
           onPressed: _onTapHeart,
         ),
         Positioned(
@@ -335,10 +308,7 @@ class MainScreenState extends State<MainScreen>
             ),
             child: Text(
               '$likes',
-              style: const TextStyle(
-                fontSize: 12,
-                color: Colors.white,
-              ),
+              style: const TextStyle(fontSize: 12, color: Colors.white),
             ),
           ),
         ),
@@ -378,7 +348,6 @@ class MainScreenState extends State<MainScreen>
 
     return true;
   }
-
 
   bool _onUndo(
     int? previousIndex,

@@ -18,7 +18,7 @@ class CatApiService {
 
   Future<List<Cat>> fetchCats({int limit = 10}) async {
     final connectivityResult = await connectivity.checkConnectivity();
-    
+
     // ignore: unrelated_type_equality_checks
     if (connectivityResult == ConnectivityResult.none) {
       throw Exception('No internet connection');
@@ -51,7 +51,9 @@ class CatApiService {
       final List<dynamic> data = json.decode(response.body);
 
       for (var image in data) {
-        final breed = (image['breeds'] ?? []).isNotEmpty ? image['breeds'][0] : null;
+        final breed = (image['breeds'] ?? []).isNotEmpty
+            ? image['breeds'][0]
+            : null;
 
         final detailResponse = await http.get(
           Uri.parse('$_baseUrl/images/${image['id']}'),
@@ -59,7 +61,9 @@ class CatApiService {
         );
 
         if (detailResponse.statusCode == 200) {
-          final Map<String, dynamic> detailData = json.decode(detailResponse.body);
+          final Map<String, dynamic> detailData = json.decode(
+            detailResponse.body,
+          );
           final breedData = (detailData['breeds'] ?? []).isNotEmpty
               ? detailData['breeds'][0]
               : breed;
