@@ -1,0 +1,12 @@
+# Flutter/Dart
+build/
+.dart_tool/
+.packages
+pubspec.lock
+
+# IDE
+.idea/
+.vscode/
+
+# macOS
+.DS_Store
