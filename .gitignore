@@ -10,3 +10,10 @@ pubspec.lock
 
 # macOS
 .DS_Store
+
+# Flutter artifacts
+.dart_tool/
+build/
+.idea/
+.flutter-plugins-dependencies
+*.apk
