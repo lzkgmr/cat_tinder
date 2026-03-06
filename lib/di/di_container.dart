@@ -1,13 +1,16 @@
 import 'package:cat_tinder/data/auth/firebase_auth_service.dart';
+import 'package:cat_tinder/data/analytics/firebase_analytics_service.dart';
 import 'package:cat_tinder/data/datasources/local/onboarding_local_data_source.dart';
 import 'package:cat_tinder/data/datasources/local/storage_service.dart';
 import 'package:cat_tinder/data/datasources/remote/cat_api_service.dart';
+import 'package:cat_tinder/data/repositories/firebase_analytics_repository.dart';
 import 'package:cat_tinder/data/repositories/api_cat_repository.dart';
 import 'package:cat_tinder/data/repositories/firebase_auth_repository.dart';
 import 'package:cat_tinder/data/repositories/firebase_session_repository.dart';
 import 'package:cat_tinder/data/repositories/local_likes_repository.dart';
 import 'package:cat_tinder/data/repositories/local_onboarding_repository.dart';
 import 'package:cat_tinder/domain/repositories/auth_repository.dart';
+import 'package:cat_tinder/domain/repositories/analytics_repository.dart';
 import 'package:cat_tinder/domain/repositories/cat_repository.dart';
 import 'package:cat_tinder/domain/repositories/likes_repository.dart';
 import 'package:cat_tinder/domain/repositories/onboarding_repository.dart';
@@ -29,6 +32,7 @@ class AppDiContainer {
     required this.catRepository,
     required this.likesRepository,
     required this.authRepository,
+    required this.analyticsRepository,
     required this.onboardingRepository,
     required this.sessionRepository,
     required this.fetchCatsStreamUseCase,
@@ -61,11 +65,15 @@ class AppDiContainer {
       apiKey: const String.fromEnvironment('CAT_API_KEY', defaultValue: ''),
     );
     final firebaseAuthService = FirebaseAuthService();
+    final firebaseAnalyticsService = FirebaseAnalyticsService();
 
     // Repositories layer
     final catRepository = ApiCatRepository(remoteDataSource: catRemoteDataSource);
     final likesRepository = LocalLikesRepository(storageService);
     final authRepository = FirebaseAuthRepository(firebaseAuthService);
+    final analyticsRepository = FirebaseAnalyticsRepository(
+      firebaseAnalyticsService,
+    );
     final onboardingRepository = LocalOnboardingRepository(
       onboardingLocalDataSource,
     );
@@ -87,8 +95,16 @@ class AppDiContainer {
     final completeOnboardingUseCase = CompleteOnboardingUseCase(
       onboardingRepository,
     );
-    final signInUseCase = SignInUseCase(authRepository, sessionRepository);
-    final signUpUseCase = SignUpUseCase(authRepository, sessionRepository);
+    final signInUseCase = SignInUseCase(
+      authRepository,
+      sessionRepository,
+      analyticsRepository,
+    );
+    final signUpUseCase = SignUpUseCase(
+      authRepository,
+      sessionRepository,
+      analyticsRepository,
+    );
     final signOutUseCase = SignOutUseCase(sessionRepository);
     final isAuthorizedUseCase = IsAuthorizedUseCase(sessionRepository);
     final getCurrentUserUseCase = GetCurrentUserUseCase(sessionRepository);
@@ -99,6 +115,7 @@ class AppDiContainer {
       catRepository: catRepository,
       likesRepository: likesRepository,
       authRepository: authRepository,
+      analyticsRepository: analyticsRepository,
       onboardingRepository: onboardingRepository,
       sessionRepository: sessionRepository,
       fetchCatsStreamUseCase: fetchCatsStreamUseCase,
@@ -128,6 +145,7 @@ class AppDiContainer {
   final CatRepository catRepository;
   final LikesRepository likesRepository;
   final AuthRepository authRepository;
+  final AnalyticsRepository analyticsRepository;
   final OnboardingRepository onboardingRepository;
   final SessionRepository sessionRepository;
 
