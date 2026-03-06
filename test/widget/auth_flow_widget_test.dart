@@ -85,14 +85,14 @@ void main() {
     ).thenAnswer((_) async {});
   });
 
-  Widget _buildTestApp() {
+  Widget buildTestApp() {
     return RepositoryProvider<AppDiContainer>.value(
       value: di,
       child: const MaterialApp(home: LoginScreen()),
     );
   }
 
-  MainCubit _makeMainCubit() {
+  MainCubit makeMainCubit() {
     final catRepository = _FakeCatRepository();
     final likesRepository = _FakeLikesRepository();
     return MainCubit(
@@ -119,9 +119,9 @@ void main() {
     );
 
     when(() => di.makeAuthCubit()).thenReturn(authCubit);
-    when(() => di.makeMainCubit()).thenReturn(_makeMainCubit());
+    when(() => di.makeMainCubit()).thenReturn(makeMainCubit());
 
-    await tester.pumpWidget(_buildTestApp());
+    await tester.pumpWidget(buildTestApp());
     await tester.pumpAndSettle();
 
     await tester.tap(find.widgetWithText(ElevatedButton, 'Login'));
@@ -154,9 +154,9 @@ void main() {
     );
 
     when(() => di.makeAuthCubit()).thenReturn(authCubit);
-    when(() => di.makeMainCubit()).thenReturn(_makeMainCubit());
+    when(() => di.makeMainCubit()).thenReturn(makeMainCubit());
 
-    await tester.pumpWidget(_buildTestApp());
+    await tester.pumpWidget(buildTestApp());
     await tester.pumpAndSettle();
 
     await tester.enterText(
