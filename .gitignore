@@ -17,3 +17,6 @@ build/
 .idea/
 .flutter-plugins-dependencies
 *.apk
+google-services.json
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
