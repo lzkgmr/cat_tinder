@@ -43,24 +43,31 @@ class _MainScreenViewState extends State<_MainScreenView> {
   }
 
   Future<void> _onTapImage(BuildContext context) async {
-    final cubit = context.read<MainCubit>();
-    final state = cubit.state;
-    final currentCat = state.currentCat;
-    if (currentCat == null) return;
+    try {
+      final cubit = context.read<MainCubit>();
+      final state = cubit.state;
+      final currentCat = state.currentCat;
+      if (currentCat == null) return;
 
-    final breed = await cubit.loadCurrentBreed();
-    if (breed == null || currentCat.imageUrl.isEmpty) return;
-    if (!context.mounted) return;
+      final breed = await cubit.loadCurrentBreed();
+      if (breed == null || currentCat.imageUrl.isEmpty) return;
+      if (!context.mounted) return;
 
-    await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => BreedDetailScreen(
-          breed: breed,
-          imageWidget: CachedNetworkImage(imageUrl: currentCat.imageUrl),
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => BreedDetailScreen(
+            breed: breed,
+            imageWidget: CachedNetworkImage(imageUrl: currentCat.imageUrl),
+          ),
         ),
-      ),
-    );
+      );
+    } catch (_) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to open breed details.')),
+      );
+    }
   }
 
   Future<void> _onTapPow(BuildContext context) async {
@@ -76,7 +83,14 @@ class _MainScreenViewState extends State<_MainScreenView> {
       MaterialPageRoute(builder: (_) => const LikedCatsScreen()),
     );
     if (!context.mounted) return;
-    await context.read<MainCubit>().refreshLikes();
+    try {
+      await context.read<MainCubit>().refreshLikes();
+    } catch (_) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to refresh likes counter.')),
+      );
+    }
   }
 
   Future<void> _onTapProfile(BuildContext context) async {
@@ -163,7 +177,7 @@ class _MainScreenViewState extends State<_MainScreenView> {
       return Center(child: Lottie.asset('assets/lottie/cat_loading.json'));
     }
     if (state.errorMessage != null && state.cats.isEmpty) {
-      return Center(child: Text(state.errorMessage!));
+      return Center(child: Text(state.errorMessage ?? 'Failed to load cats.'));
     }
     if (state.cats.isEmpty) {
       return const Center(child: Text('No cats yet'));

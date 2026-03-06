@@ -46,7 +46,7 @@ class CatApiService implements CatRemoteDataSource {
 
     final response = await http.get(
       Uri.parse('$_baseUrl/images/search?limit=$limit&has_breeds=1'),
-      headers: apiKey != null ? {'x-api-key': apiKey!} : null,
+      headers: _headers(),
     );
 
     if (response.statusCode == 200) {
@@ -59,7 +59,7 @@ class CatApiService implements CatRemoteDataSource {
 
         final detailResponse = await http.get(
           Uri.parse('$_baseUrl/images/${image['id']}'),
-          headers: apiKey != null ? {'x-api-key': apiKey!} : null,
+          headers: _headers(),
         );
 
         if (detailResponse.statusCode == 200) {
@@ -105,7 +105,7 @@ class CatApiService implements CatRemoteDataSource {
       try {
         final response = await http.get(
           Uri.parse('$_baseUrl/images/search?limit=$limit&has_breeds=1'),
-          headers: apiKey != null ? {'x-api-key': apiKey!} : null,
+          headers: _headers(),
         );
 
         if (response.statusCode == 200) {
@@ -139,7 +139,7 @@ class CatApiService implements CatRemoteDataSource {
       try {
         final response = await http.get(
           Uri.parse('$_baseUrl/images/$imageId'),
-          headers: apiKey != null ? {'x-api-key': apiKey!} : null,
+          headers: _headers(),
         );
 
         if (response.statusCode == 200) {
@@ -187,7 +187,7 @@ class CatApiService implements CatRemoteDataSource {
       try {
         final response = await http.get(
           Uri.parse('$_baseUrl/breeds'),
-          headers: apiKey != null ? {'x-api-key': apiKey!} : null,
+          headers: _headers(),
         );
 
         if (response.statusCode == 200) {
@@ -243,5 +243,11 @@ class CatApiService implements CatRemoteDataSource {
     } catch (_) {
       return null;
     }
+  }
+
+  Map<String, String>? _headers() {
+    final key = apiKey;
+    if (key == null || key.isEmpty) return null;
+    return {'x-api-key': key};
   }
 }

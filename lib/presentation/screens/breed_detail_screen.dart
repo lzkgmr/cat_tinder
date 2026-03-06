@@ -63,11 +63,12 @@ class BreedDetailScreen extends StatelessWidget {
   }
 
   Widget _buildTemps() {
+    final temperament = breed.temperament ?? '';
     return Wrap(
       spacing: 8,
       runSpacing: 8,
       alignment: WrapAlignment.start,
-      children: breed.temperament!
+      children: temperament
           .split(',')
           .map(
             (temp) => Container(
@@ -91,6 +92,7 @@ class BreedDetailScreen extends StatelessWidget {
   }
 
   Widget _buildOrigin() {
+    final origin = breed.origin ?? '';
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
@@ -107,7 +109,7 @@ class BreedDetailScreen extends StatelessWidget {
           const SizedBox(width: 12),
           // country name
           Text(
-            breed.origin!,
+            origin,
             style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
           ),
         ],

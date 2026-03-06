@@ -49,8 +49,9 @@ class _LoginViewState extends State<_LoginView> {
           );
         }
         if (state.status == AuthStatus.failure && state.errorMessage != null) {
+          final message = state.errorMessage ?? 'Login failed. Please try again.';
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.errorMessage!)),
+            SnackBar(content: Text(message)),
           );
         }
       },

@@ -15,6 +15,7 @@ class AppStartRouter extends StatefulWidget {
 class _AppStartRouterState extends State<AppStartRouter> {
   bool? _isOnboardingCompleted;
   bool? _isAuthorized;
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -23,30 +24,60 @@ class _AppStartRouterState extends State<AppStartRouter> {
   }
 
   Future<void> _loadState() async {
-    final di = context.read<AppDiContainer>();
-    final completed = await di.isOnboardingCompletedUseCase();
-    final authorized = completed ? await di.isAuthorizedUseCase() : false;
-    if (!mounted) return;
-    setState(() {
-      _isOnboardingCompleted = completed;
-      _isAuthorized = authorized;
-    });
+    try {
+      final di = context.read<AppDiContainer>();
+      final completed = await di.isOnboardingCompletedUseCase();
+      final authorized = completed ? await di.isAuthorizedUseCase() : false;
+      if (!mounted) return;
+      setState(() {
+        _isOnboardingCompleted = completed;
+        _isAuthorized = authorized;
+        _errorMessage = null;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _errorMessage = 'Failed to load app state. Please try again.';
+      });
+    }
   }
 
   Future<void> _completeOnboarding() async {
-    final di = context.read<AppDiContainer>();
-    await di.completeOnboardingUseCase();
-    final authorized = await di.isAuthorizedUseCase();
-    if (!mounted) return;
-    setState(() {
-      _isOnboardingCompleted = true;
-      _isAuthorized = authorized;
-    });
+    try {
+      final di = context.read<AppDiContainer>();
+      await di.completeOnboardingUseCase();
+      final authorized = await di.isAuthorizedUseCase();
+      if (!mounted) return;
+      setState(() {
+        _isOnboardingCompleted = true;
+        _isAuthorized = authorized;
+        _errorMessage = null;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to complete onboarding. Try again.')),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     if (_isOnboardingCompleted == null || _isAuthorized == null) {
+      if (_errorMessage != null) {
+        return Scaffold(
+          body: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(_errorMessage ?? 'Unknown error'),
+                const SizedBox(height: 10),
+                ElevatedButton(onPressed: _loadState, child: const Text('Retry')),
+              ],
+            ),
+          ),
+        );
+      }
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
       );

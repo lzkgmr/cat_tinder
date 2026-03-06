@@ -44,7 +44,9 @@ class ProfileScreen extends StatelessWidget {
               FutureBuilder<AuthUser?>(
                 future: di.getCurrentUserUseCase(),
                 builder: (context, snapshot) {
-                  final email = snapshot.data?.email ?? 'No email';
+                  final email = snapshot.hasError
+                      ? 'Failed to load email'
+                      : (snapshot.data?.email ?? 'No email');
                   return Container(
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(
@@ -75,14 +77,23 @@ class ProfileScreen extends StatelessWidget {
                 width: double.infinity,
                 child: ElevatedButton.icon(
                   onPressed: () async {
-                    await di.signOutUseCase();
-                    if (!context.mounted) return;
-                    Navigator.of(context).pushAndRemoveUntil(
-                      MaterialPageRoute(
-                        builder: (_) => const AppStartRouter(),
-                      ),
-                      (route) => false,
-                    );
+                    try {
+                      await di.signOutUseCase();
+                      if (!context.mounted) return;
+                      Navigator.of(context).pushAndRemoveUntil(
+                        MaterialPageRoute(
+                          builder: (_) => const AppStartRouter(),
+                        ),
+                        (route) => false,
+                      );
+                    } catch (_) {
+                      if (!context.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Failed to log out. Please try again.'),
+                        ),
+                      );
+                    }
                   },
                   icon: const Icon(Icons.logout),
                   label: const Text('Log out'),

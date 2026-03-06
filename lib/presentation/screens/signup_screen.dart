@@ -50,8 +50,9 @@ class _SignUpViewState extends State<_SignUpView> {
           );
         }
         if (state.status == AuthStatus.failure && state.errorMessage != null) {
+          final message = state.errorMessage ?? 'Sign up failed. Please try again.';
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.errorMessage!)),
+            SnackBar(content: Text(message)),
           );
         }
       },

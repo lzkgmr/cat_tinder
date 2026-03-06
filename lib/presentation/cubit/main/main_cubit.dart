@@ -28,14 +28,27 @@ class MainCubit extends Cubit<MainState> {
        super(MainState.initial());
 
   Future<void> initialize() async {
-    final likes = await _getLikesCount();
-    emit(state.copyWith(likesCount: likes, isLoading: state.cats.isEmpty));
-    await loadMoreCatsIfNeeded(force: true);
+    try {
+      final likes = await _getLikesCount();
+      emit(state.copyWith(likesCount: likes, isLoading: state.cats.isEmpty));
+      await loadMoreCatsIfNeeded(force: true);
+    } catch (_) {
+      emit(
+        state.copyWith(
+          isLoading: false,
+          errorMessage: 'Failed to initialize main screen.',
+        ),
+      );
+    }
   }
 
   Future<void> refreshLikes() async {
-    final likes = await _getLikesCount();
-    emit(state.copyWith(likesCount: likes));
+    try {
+      final likes = await _getLikesCount();
+      emit(state.copyWith(likesCount: likes));
+    } catch (_) {
+      emit(state.copyWith(errorMessage: 'Failed to refresh likes.'));
+    }
   }
 
   Future<void> loadMoreCatsIfNeeded({bool force = false}) async {
@@ -73,12 +86,16 @@ class MainCubit extends Cubit<MainState> {
     }
 
     if (liked) {
-      final cat = state.cats[previousIndex];
-      final newLikes = state.likesCount + 1;
-      emit(state.copyWith(likesCount: newLikes));
+      try {
+        final cat = state.cats[previousIndex];
+        final newLikes = state.likesCount + 1;
+        emit(state.copyWith(likesCount: newLikes));
 
-      await _setLikesCount(newLikes);
-      await _addLikedCat(cat);
+        await _setLikesCount(newLikes);
+        await _addLikedCat(cat);
+      } catch (_) {
+        emit(state.copyWith(errorMessage: 'Failed to save liked cat.'));
+      }
     }
 
     if (nextIndex != null) {
@@ -92,10 +109,15 @@ class MainCubit extends Cubit<MainState> {
   }
 
   Future<Breed?> loadCurrentBreed() async {
-    final currentCat = state.currentCat;
-    if (currentCat == null || currentCat.breedId.isEmpty) {
+    try {
+      final currentCat = state.currentCat;
+      if (currentCat == null || currentCat.breedId.isEmpty) {
+        return null;
+      }
+      return _fetchBreedById(currentCat.breedId);
+    } catch (_) {
+      emit(state.copyWith(errorMessage: 'Failed to load breed details.'));
       return null;
     }
-    return _fetchBreedById(currentCat.breedId);
   }
 }

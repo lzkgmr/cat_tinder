@@ -31,11 +31,21 @@ class LikedCatsCubit extends Cubit<LikedCatsState> {
     final updated = List<Cat>.from(state.cats)
       ..removeWhere((current) => current.id == cat.id);
     emit(state.copyWith(cats: updated));
-    await _removeLikedCat(cat.id);
+    try {
+      await _removeLikedCat(cat.id);
+    } catch (_) {
+      emit(state.copyWith(errorMessage: 'Failed to remove cat.'));
+      await load();
+    }
   }
 
   Future<void> clear() async {
-    await _clearLikedCats();
-    emit(state.copyWith(cats: <Cat>[]));
+    try {
+      await _clearLikedCats();
+      emit(state.copyWith(cats: <Cat>[]));
+    } catch (_) {
+      emit(state.copyWith(errorMessage: 'Failed to clear liked cats.'));
+      await load();
+    }
   }
 }

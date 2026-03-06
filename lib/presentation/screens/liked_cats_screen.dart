@@ -46,7 +46,7 @@ class _LikedCatsView extends StatelessWidget {
       return const Center(child: CircularProgressIndicator());
     }
     if (state.errorMessage != null) {
-      return Center(child: Text(state.errorMessage!));
+      return Center(child: Text(state.errorMessage ?? 'Failed to load liked cats.'));
     }
     if (state.cats.isEmpty) {
       return const Center(
@@ -159,7 +159,14 @@ class _LikedCatsView extends StatelessWidget {
     );
 
     if (confirm == true && context.mounted) {
-      await context.read<LikedCatsCubit>().clear();
+      try {
+        await context.read<LikedCatsCubit>().clear();
+      } catch (_) {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to clear liked cats. Try again.')),
+        );
+      }
     }
   }
 }

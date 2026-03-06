@@ -39,7 +39,7 @@ class _BreedListView extends StatelessWidget {
               return const Center(child: CircularProgressIndicator());
             }
             if (state.errorMessage != null) {
-              return Center(child: Text(state.errorMessage!));
+              return Center(child: Text(state.errorMessage ?? 'Failed to load breeds.'));
             }
             if (state.breeds.isEmpty) {
               return const Center(child: Text('No breeds found'));
