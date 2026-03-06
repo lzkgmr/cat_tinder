@@ -1,4 +1,5 @@
 # pussycats - Cat Tinder
+[![Flutter CI](https://github.com/lzkgmr/cat_tinder/actions/workflows/flutter_ci.yml/badge.svg?branch=main)](https://github.com/lzkgmr/cat_tinder/actions/workflows/flutter_ci.yml)
 
 An app for searching cat photos and learning about breeds.  
 [Download APK](https://github.com/lzkgmr/cat_tinder/releases/download/v0.0.meow/app-release.apk)
