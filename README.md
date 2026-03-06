@@ -5,6 +5,7 @@ An app for searching cat photos and learning about breeds.
 [Download APK](https://github.com/lzkgmr/cat_tinder/releases/download/v0.0.meow/app-release.apk)
 
 ## What's in the app?
+### you can see hw2 updates below
 
 ### 1. Pretty icon and funny loading animation with cats>
 <img src="assets/images/animation.png" height="400"> <img src="assets/icons/cat_icon.png" width=200 style="vertical-align: top;">
@@ -30,7 +31,7 @@ Breeds in this list are unique. User can *open details*, *remove particular cat*
 
 <img src="assets/images/liked_cats.png" height="400"> <img src="assets/images/alert.png" height="400"> <img src="assets/images/no_liked_cats.png" height="400">
 
-### 5. Last, but not least! Breed details.
+### 5. Breed details.
 User can open breed details from the `main screen` (tap to picture of the cat), from the `breed list` and from the `liked cats`.
 There is an information about breed:
 1. Picture 
@@ -54,3 +55,19 @@ There is an information about breed:
 - The flutter analyze command runs successfully.
 - The `http package` and `TheCatApi.com' were used.
 - The `Image` and `CachedNetworkImage` widget is used to display images.
+
+### 6. Onboarding
+User can see short info about app features before he sign up. It shows only once and user can skip it. There is animated logo during swiping.
+<img src="assets/images/onboarding1.png" height="400"> <img src="assets/images/onboarding2.png" height="400">  <img src="assets/images/onboarding3.png" height="400">
+
+### 7. Registration and sign in
+User can register a new account with email and password (Firebase Auth), sign in exicting account and log out in profile.
+If user inputs incorrect or invalid data, he sees an error.
+<img src="assets/images/signin1.png" height="400"> <img src="assets/images/signin2.png" height="400">  <img src="assets/images/signup.png" height="400">
+
+### Something more in this project
+- Clean Architecture
+- Unit-tests
+- Widjet-tests
+- CI/CD
+- Firebase Analytics
