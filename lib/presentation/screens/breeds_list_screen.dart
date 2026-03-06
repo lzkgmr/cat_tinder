@@ -1,24 +1,26 @@
+import 'package:cat_tinder/domain/entities/breed.dart';
+import 'package:cat_tinder/di/di_container.dart';
+import 'package:cat_tinder/presentation/cubit/breeds/breeds_cubit.dart';
+import 'package:cat_tinder/presentation/cubit/breeds/breeds_state.dart';
 import 'package:flutter/material.dart';
-import '../models/breed.dart';
-import '../services/cat_api_service.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'breed_detail_screen.dart';
 
-class BreedListScreen extends StatefulWidget {
+class BreedListScreen extends StatelessWidget {
   const BreedListScreen({super.key});
 
   @override
-  State<BreedListScreen> createState() => _BreedListScreenState();
+  Widget build(BuildContext context) {
+    final di = context.read<AppDiContainer>();
+    return BlocProvider(
+      create: (context) => di.makeBreedsCubit()..loadBreeds(),
+      child: const _BreedListView(),
+    );
+  }
 }
 
-class _BreedListScreenState extends State<BreedListScreen> {
-  final CatApiService api = CatApiService();
-  late Future<List<Breed>> futureBreeds;
-
-  @override
-  void initState() {
-    super.initState();
-    futureBreeds = api.fetchBreeds();
-  }
+class _BreedListView extends StatelessWidget {
+  const _BreedListView();
 
   @override
   Widget build(BuildContext context) {
@@ -31,25 +33,27 @@ class _BreedListScreenState extends State<BreedListScreen> {
       child: Scaffold(
         appBar: _buildAppBar(),
         backgroundColor: const Color.fromARGB(255, 242, 242, 242),
-        body: FutureBuilder<List<Breed>>(
-          future: futureBreeds,
-          builder: (context, snapshot) {
-            if (!snapshot.hasData) {
+        body: BlocBuilder<BreedsCubit, BreedsState>(
+          builder: (context, state) {
+            if (state.isLoading) {
               return const Center(child: CircularProgressIndicator());
             }
-            final breeds = snapshot.data!;
+            if (state.errorMessage != null) {
+              return Center(child: Text(state.errorMessage!));
+            }
+            if (state.breeds.isEmpty) {
+              return const Center(child: Text('No breeds found'));
+            }
 
             return ListView.separated(
               padding: const EdgeInsets.all(16),
-              itemCount: breeds.length,
+              itemCount: state.breeds.length,
               separatorBuilder: (_, _) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
-                final breed = breeds[index];
+                final breed = state.breeds[index];
 
                 return GestureDetector(
-                  onTap: () {
-                    _onTapCell(context, breed);
-                  },
+                  onTap: () => _onTapCell(context, breed),
                   child: Container(
                     height: 120,
                     decoration: _buildDecoration(),
@@ -82,8 +86,8 @@ AppBar _buildAppBar() {
   );
 }
 
-Future _onTapCell(BuildContext context, Breed breed) async {
-  Navigator.push(
+Future<void> _onTapCell(BuildContext context, Breed breed) async {
+  await Navigator.push(
     context,
     MaterialPageRoute(
       builder: (_) => BreedDetailScreen(
@@ -98,11 +102,11 @@ BoxDecoration _buildDecoration() {
   return BoxDecoration(
     color: Colors.white,
     borderRadius: BorderRadius.circular(16),
-    boxShadow: [
+    boxShadow: const [
       BoxShadow(
-        color: const Color.fromARGB(102, 0, 0, 0),
+        color: Color.fromARGB(102, 0, 0, 0),
         blurRadius: 6,
-        offset: const Offset(0, 3),
+        offset: Offset(0, 3),
       ),
     ],
   );

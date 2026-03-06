@@ -1,6 +1,6 @@
 import 'dart:convert';
+import 'package:cat_tinder/domain/entities/cat.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../models/cat.dart';
 
 class StorageService {
   static const String _likesKey = 'likes_count';

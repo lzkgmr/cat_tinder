@@ -1,12 +1,13 @@
 import 'dart:convert';
-import 'package:cat_tinder/models/cat.dart';
+import 'package:cat_tinder/domain/entities/breed.dart';
+import 'package:cat_tinder/domain/entities/cat.dart';
+import 'package:cat_tinder/data/datasources/remote/cat_remote_data_source.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
-import '../models/breed.dart';
 
-class CatApiService {
+class CatApiService implements CatRemoteDataSource {
   static const _baseUrl = 'https://api.thecatapi.com/v1';
   final String? apiKey;
   final Connectivity connectivity;
@@ -35,6 +36,7 @@ class CatApiService {
     return cats;
   }
 
+  @override
   Stream<Cat> fetchCatsStream({int limit = 10}) async* {
     final connectivityResult = await connectivity.checkConnectivity();
     // ignore: unrelated_type_equality_checks
@@ -176,6 +178,7 @@ class CatApiService {
     );
   }
 
+  @override
   Future<List<Breed>> fetchBreeds() async {
     int attempts = 0;
     // breeds with 403 error trying to get images
@@ -232,6 +235,7 @@ class CatApiService {
     throw Exception('Failed to load breeds after multiple attempts');
   }
 
+  @override
   Future<Breed?> fetchBreedById(String id) async {
     final breeds = await fetchBreeds();
     try {
